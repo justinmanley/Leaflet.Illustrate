@@ -12,7 +12,7 @@ L.Illustrate.Toolbar = L.DrawToolbar.extend({
 	getModeHandlers: function(map) {
 		var illustrateModes = [{
 			enabled: this.options.text,
-			handler: new L.Illustrate.Textbox(map, this.options.text),
+			handler: new L.Illustrate.Create.Textbox(map, this.options.text),
 			title: 'Add a textbox'
 		}];
 		return L.DrawToolbar.prototype.getModeHandlers(map).concat(illustrateModes);

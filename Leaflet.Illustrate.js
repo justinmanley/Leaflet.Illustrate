@@ -16,7 +16,7 @@ L.Illustrate.Toolbar = L.DrawToolbar.extend({
 	getModeHandlers: function(map) {
 		var illustrateModes = [{
 			enabled: this.options.text,
-			handler: new L.Illustrate.Textbox(map, this.options.text),
+			handler: new L.Illustrate.Create.Textbox(map, this.options.text),
 			title: 'Add a textbox'
 		}];
 		return L.DrawToolbar.prototype.getModeHandlers(map).concat(illustrateModes);
@@ -63,7 +63,9 @@ L.Map.addInitHook(function() {
 
 	}
 });
-L.Illustrate.Textbox = L.Draw.Rectangle.extend({
+L.Illustrate.Create = L.Illustrate.Create || {};
+
+L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	statics: {
 		TYPE: 'textbox'
 	},
@@ -96,13 +98,35 @@ L.Illustrate.Textbox = L.Draw.Rectangle.extend({
 			});
 			this._textarea = new L.Marker(this._startLatLng, { icon: textarea });
 			this._map.addLayer(this._textarea);
-
-			this._textarea.on('click', function(evt) {
-				evt.target._icon.children[0].focus();
-			});
 		} else {
 			this._textarea._icon.children[0].style.width = width + "px";
 			this._textarea._icon.children[0].style.height = height + "px";
+		}
+	}
+});
+L.Illustrate.Edit = L.Illustrate.Edit || {};
+
+L.Illustrate.Edit.Textbox = L.Edit.Rectangle.extend({
+
+	// figure out why this is not overriding the super method
+	addHooks: function() {
+		this._enableTyping();
+	},
+
+	_enableTyping: function() {
+		this._textarea.on('click', function(evt) {
+			evt.target._icon.children[0].focus();
+		});
+	}
+
+});
+
+L.Illustrate.Create.Textbox.addInitHook(function() {
+	if (L.Illustrate.Edit.Textbox) {
+		this.editing = new L.Illustrate.Edit.Textbox(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
 		}
 	}
 });

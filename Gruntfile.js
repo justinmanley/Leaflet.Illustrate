@@ -99,7 +99,7 @@ module.exports = function(grunt) {
                 }
             },
             source: {
-                src: [ 'src/*.js', 'src/illustrate/*.js', 'Gruntfile.js', 'package.json' ]
+                src: [ 'src/*.js', 'src/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
             tests: {
                 src: [],
@@ -124,7 +124,7 @@ module.exports = function(grunt) {
             source: {
                 files: [
                     'src/*.js',
-                    'src/illustrate/*.js',
+                    'src/*/*.js',
                     'Leaflet.Illustrate.less',
                     'Gruntfile.js'
                 ],
@@ -148,7 +148,7 @@ module.exports = function(grunt) {
                     banner: '(function(window, document, undefined) {\n\n"use strict";\n\n',
                     footer: '\n\n}(window, document));'
                 },
-                src: [ 'src/*.js', 'src/illustrate/*.js' ],
+                src: [ 'src/*.js', 'src/*/*.js' ],
                 dest: 'Leaflet.Illustrate.js',
             }
         }
