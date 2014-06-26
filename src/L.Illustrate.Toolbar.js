@@ -1,5 +1,3 @@
-L.Illustrate = {};
-
 L.Illustrate.Toolbar = L.DrawToolbar.extend({
 	statics: {
 		TYPE: 'illustrate'
@@ -56,6 +54,5 @@ L.Map.addInitHook(function() {
 	if (this.options.illustrateControl) {
 		this.illustrateControl = new L.Illustrate.Control();
 		this.addControl(this.illustrateControl);
-
 	}
 });

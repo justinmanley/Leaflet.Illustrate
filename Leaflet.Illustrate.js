@@ -3,7 +3,72 @@
 "use strict";
 
 L.Illustrate = {};
+L.Illustrate.Textbox = L.Class.extend({
+	statics: {
+		TYPE: 'textbox'
+	},
 
+	options: {
+
+	},
+
+	initialize: function(latlng, options) {
+		L.setOptions(options);
+		this._latlng = latlng;
+		this._initTextbox();
+	},
+
+	_initTextbox: function() {
+		var textarea = new L.DivIcon({
+			className: 'leaflet-illustrate-textbox',
+			html: '<textarea></textarea>'
+		});
+		this._shape = new L.Marker(this._latlng, { icon: textarea });
+	},
+
+	onAdd: function(map) {
+		this._map = map;
+
+		this._map.addLayer(this._shape);
+	},
+
+	onRemove: function() {
+		// noop
+		// why do I need this?
+	},
+
+	setLatLng: function(latlng) {
+		this._latlng = latlng;
+
+		this._updateAnchorLatLng();
+	},
+
+	getLatLng: function() {
+		return this._latlng;
+	},
+
+	getSize: function() {
+		return new L.Point(this._width, this._height);
+	},
+
+	setSize: function(size) {
+		this._width = size.x;
+		this._height = size.y;
+
+		this._updateSize();
+	},
+
+	_updateLatLng: function() {
+		this._shape.setLatLng(this._latlng);
+	},
+
+	_updateSize: function() {
+		if (this._shape._icon) {
+			this._shape._icon.children[0].style.width = this._width + "px";
+			this._shape._icon.children[0].style.height = this._height + "px";
+		}
+	}
+});
 L.Illustrate.Toolbar = L.DrawToolbar.extend({
 	statics: {
 		TYPE: 'illustrate'
@@ -60,68 +125,64 @@ L.Map.addInitHook(function() {
 	if (this.options.illustrateControl) {
 		this.illustrateControl = new L.Illustrate.Control();
 		this.addControl(this.illustrateControl);
-
 	}
 });
 L.Illustrate.Create = L.Illustrate.Create || {};
 
-L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
+L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	statics: {
 		TYPE: 'textbox'
 	},
 
 	options: {
 		shapeOptions: {
-			stroke: true,
-			color: '#0000EE',
-			weight: 1,
-			opacity: 1,
-			fill: false,
-			clickable: true,
-			editable: true
+			color: '#000000'
 		}
 	},
 
 	_drawShape: function(latlng) {
-		L.Draw.Rectangle.prototype._drawShape.call(this, latlng);
+		var bounds = new L.LatLngBounds(this._startLatLng, latlng),
+			anchor = bounds.getCenter(),
+			upperLeft = this._map.latLngToLayerPoint(bounds.getSouthWest()).round(),
+			lowerRight = this._map.latLngToLayerPoint(bounds.getNorthEast()).round(),
+			height = upperLeft.y - lowerRight.y,
+			width = lowerRight.x - upperLeft.x;
 
-		var startPoint = this._map.latLngToLayerPoint(latlng).round(),
-			currentPoint = this._map.latLngToLayerPoint(this._startLatLng).round(),
-			width = startPoint.x - currentPoint.x,
-			height = startPoint.y - currentPoint.y;
-
-		if (!this._textarea) {
-			var textarea = new L.DivIcon({
-				className: 'leaflet-illustrate-text-container',
-				html: '<textarea style="height: '+height+'px; width: '+width+'px;"></textarea>',
-				iconAnchor: [-1, -1]
-			});
-			this._textarea = new L.Marker(this._startLatLng, { icon: textarea });
-			this._map.addLayer(this._textarea);
-		} else {
-			this._textarea._icon.children[0].style.width = width + "px";
-			this._textarea._icon.children[0].style.height = height + "px";
+		if (!this._shape) {
+			this._shape = new L.Illustrate.Textbox(anchor, this.options.shapeOptions);
+			this._map.addLayer(this._shape);
 		}
+
+		this._shape.setSize(new L.Point(width, height));
+	},
+
+	_fireCreatedEvent: function() {
+		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions);
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
-L.Illustrate.Edit.Textbox = L.Edit.Rectangle.extend({
+L.Illustrate.Edit.Textbox = L.Handler.extend({
 
-	// figure out why this is not overriding the super method
 	addHooks: function() {
 		this._enableTyping();
 	},
 
 	_enableTyping: function() {
-		this._textarea.on('click', function(evt) {
+		this._shape.on('click', function(evt) {
 			evt.target._icon.children[0].focus();
 		});
 	}
 
 });
 
-L.Illustrate.Create.Textbox.addInitHook(function() {
+// It may not be desirable to be adding hooks to L.Rectangle.  What if the textboxes stop using L.Rectangle?
+// Then these hooks will no longer fire.  Perhaps better to create an L.Textbox base class?
+// L.Illustrate.Create.Textbox is called when the toolbar is loaded, while L.Rectangle is not called
+// until a rectangle is *drawn* on the map.
+// Also, this is obviously NOT ideal because whenever normal rectangles are drawn, these hooks will be called as well.
+L.Rectangle.addInitHook(function() {
 	if (L.Illustrate.Edit.Textbox) {
 		this.editing = new L.Illustrate.Edit.Textbox(this);
 

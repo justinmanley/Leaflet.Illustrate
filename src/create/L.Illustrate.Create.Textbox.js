@@ -1,41 +1,34 @@
 L.Illustrate.Create = L.Illustrate.Create || {};
 
-L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
+L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	statics: {
 		TYPE: 'textbox'
 	},
 
 	options: {
 		shapeOptions: {
-			stroke: true,
-			color: '#0000EE',
-			weight: 1,
-			opacity: 1,
-			fill: false,
-			clickable: true,
-			editable: true
+			color: '#000000'
 		}
 	},
 
 	_drawShape: function(latlng) {
-		L.Draw.Rectangle.prototype._drawShape.call(this, latlng);
+		var bounds = new L.LatLngBounds(this._startLatLng, latlng),
+			anchor = bounds.getCenter(),
+			upperLeft = this._map.latLngToLayerPoint(bounds.getSouthWest()).round(),
+			lowerRight = this._map.latLngToLayerPoint(bounds.getNorthEast()).round(),
+			height = upperLeft.y - lowerRight.y,
+			width = lowerRight.x - upperLeft.x;
 
-		var startPoint = this._map.latLngToLayerPoint(latlng).round(),
-			currentPoint = this._map.latLngToLayerPoint(this._startLatLng).round(),
-			width = startPoint.x - currentPoint.x,
-			height = startPoint.y - currentPoint.y;
-
-		if (!this._textarea) {
-			var textarea = new L.DivIcon({
-				className: 'leaflet-illustrate-text-container',
-				html: '<textarea style="height: '+height+'px; width: '+width+'px;"></textarea>',
-				iconAnchor: [-1, -1]
-			});
-			this._textarea = new L.Marker(this._startLatLng, { icon: textarea });
-			this._map.addLayer(this._textarea);
-		} else {
-			this._textarea._icon.children[0].style.width = width + "px";
-			this._textarea._icon.children[0].style.height = height + "px";
+		if (!this._shape) {
+			this._shape = new L.Illustrate.Textbox(anchor, this.options.shapeOptions);
+			this._map.addLayer(this._shape);
 		}
+
+		this._shape.setSize(new L.Point(width, height));
+	},
+
+	_fireCreatedEvent: function() {
+		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions);
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });

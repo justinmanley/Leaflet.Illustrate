@@ -148,7 +148,11 @@ module.exports = function(grunt) {
                     banner: '(function(window, document, undefined) {\n\n"use strict";\n\n',
                     footer: '\n\n}(window, document));'
                 },
-                src: [ 'src/*.js', 'src/*/*.js' ],
+                src: [
+                    'src/L.Illustrate.js',
+                    'src/L.Illustrate.*.js',
+                    'src/*/*.js'
+                ],
                 dest: 'Leaflet.Illustrate.js',
             }
         }
