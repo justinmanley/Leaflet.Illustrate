@@ -3,6 +3,7 @@
 "use strict";
 
 L.Illustrate = {};
+
 L.Illustrate.Textbox = L.Class.extend({
 	statics: {
 		TYPE: 'textbox'
@@ -18,6 +19,9 @@ L.Illustrate.Textbox = L.Class.extend({
 		L.setOptions(this, options);
 		this._latlng = latlng;
 		this._initTextbox();
+		if (this._textbox._icon) {
+			console.log('this._textbox._icon finally exists');
+		}
 	},
 
 	_initTextbox: function() {
@@ -26,21 +30,19 @@ L.Illustrate.Textbox = L.Class.extend({
 			html: '<textarea style="width: 100%; height: 100%"></textarea>'
 		});
 		this._textbox = new L.Marker(this._latlng, { icon: textarea });
+		if (this._textbox._icon) {
+			console.log('this._textbox._icon exists');
+		}
 	},
 
 	onAdd: function(map) {
 		this._map = map;
 
-		this._updateLatLng();
 		this._map.addLayer(this._textbox);
+		this._updateLatLng();
+		this._updateSize();
 
-		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
-			event.target.focus();
-		});
-
-		L.DomEvent.on(this._textbox._icon, 'mouseover', function() {
-			// want to disable dragging on the map	
-		});
+		this._enableTyping();
 
 		this.fire('add');
 	},
@@ -51,13 +53,20 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	onRemove: function() {
+		this._map.removeLayer(this._textbox);
+
 		this.fire('remove');
+
+		this._map = null;
+		this._textbox = null;
 	},
 
 	setLatLng: function(latlng) {
 		this._latlng = latlng;
 
 		this._updateLatLng();
+
+		return this;
 	},
 
 	getLatLng: function() {
@@ -73,22 +82,12 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._height = size.y;
 
 		this._updateSize();
+
+		return this;
 	},
 
 	_updateLatLng: function() {
 		this._textbox.setLatLng(this._latlng);
-	},
-
-	/* 
-	 *	Should always do a check to make sure that this._textbox._icon is defined before calling this. 
-	 *	If the marker containing the textarea has not yet been added to the map, it may not be defined. 
-	 */
-	_getTextarea: function() {
-		if (this._textbox._icon) {
-			return this._textbox._icon.children[0];
-		} else {
-			return;
-		}
 	},
 
 	_updateSize: function() {
@@ -96,8 +95,15 @@ L.Illustrate.Textbox = L.Class.extend({
 			this._textbox._icon.style.width = this._width + "px";
 			this._textbox._icon.style.height = this._height + "px";
 		}
+	},
+
+	_enableTyping: function() {
+		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
+			event.target.focus();
+		});
 	}
 });
+
 L.Illustrate.Toolbar = L.DrawToolbar.extend({
 	statics: {
 		TYPE: 'illustrate'
@@ -193,12 +199,31 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_fireCreatedEvent: function() {
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, this._shape);
+		/* 
+		 * Need to create a new textbox because *this* is destroyed on when this.disable() 
+		 * is called from L.Draw.SimpleShape._fireCreatedEvent.
+		 */
+
+		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions)
+			.setSize(this._shape.getSize());
+		if (textbox._textbox._icon) {
+			console.log('textbox._textbox._icon exists at long last');
+		}
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
-L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({});
+L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
+	initialize: function(shape, options) {
+		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+		// the problem with adding icon listeners is that _initIcon (the method which creates the _icon property)
+		// is not set until the marker is added to the map
+		// i.e. it is not set until drawnItems.addLayer(layer) is called.
+		// this means that somehow I need to add a hook to be called when L.Illustrate.Textbox is added
+		// to the map.  So maybe I add a hook to shape?  Can I do that?
+	}
+});
 
 L.Illustrate.Textbox.addInitHook(function() {
 	if (L.Illustrate.Edit.Textbox) {

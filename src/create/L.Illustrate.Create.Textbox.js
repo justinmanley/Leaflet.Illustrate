@@ -35,6 +35,16 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_fireCreatedEvent: function() {
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, this._shape);
+		/* 
+		 * Need to create a new textbox because *this* is destroyed on when this.disable() 
+		 * is called from L.Draw.SimpleShape._fireCreatedEvent.
+		 */
+
+		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions)
+			.setSize(this._shape.getSize());
+		if (textbox._textbox._icon) {
+			console.log('textbox._textbox._icon exists at long last');
+		}
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
