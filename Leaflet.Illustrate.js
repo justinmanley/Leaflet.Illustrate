@@ -8,12 +8,14 @@ L.Illustrate.Textbox = L.Class.extend({
 		TYPE: 'textbox'
 	},
 
-	options: {
+	includes: [L.Mixin.Events],
 
+	options: {
+		color: '#db1d0f'
 	},
 
 	initialize: function(latlng, options) {
-		L.setOptions(options);
+		L.setOptions(this, options);
 		this._latlng = latlng;
 		this._initTextbox();
 	},
@@ -21,26 +23,41 @@ L.Illustrate.Textbox = L.Class.extend({
 	_initTextbox: function() {
 		var textarea = new L.DivIcon({
 			className: 'leaflet-illustrate-textbox',
-			html: '<textarea></textarea>'
+			html: '<textarea style="width: 100%; height: 100%"></textarea>'
 		});
-		this._shape = new L.Marker(this._latlng, { icon: textarea });
+		this._textbox = new L.Marker(this._latlng, { icon: textarea });
 	},
 
 	onAdd: function(map) {
 		this._map = map;
 
-		this._map.addLayer(this._shape);
+		this._updateLatLng();
+		this._map.addLayer(this._textbox);
+
+		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
+			event.target.focus();
+		});
+
+		L.DomEvent.on(this._textbox._icon, 'mouseover', function() {
+			// want to disable dragging on the map	
+		});
+
+		this.fire('add');
+	},
+
+	addTo: function(map) {
+		map.addLayer(this);
+		return this;
 	},
 
 	onRemove: function() {
-		// noop
-		// why do I need this?
+		this.fire('remove');
 	},
 
 	setLatLng: function(latlng) {
 		this._latlng = latlng;
 
-		this._updateAnchorLatLng();
+		this._updateLatLng();
 	},
 
 	getLatLng: function() {
@@ -59,13 +76,25 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_updateLatLng: function() {
-		this._shape.setLatLng(this._latlng);
+		this._textbox.setLatLng(this._latlng);
+	},
+
+	/* 
+	 *	Should always do a check to make sure that this._textbox._icon is defined before calling this. 
+	 *	If the marker containing the textarea has not yet been added to the map, it may not be defined. 
+	 */
+	_getTextarea: function() {
+		if (this._textbox._icon) {
+			return this._textbox._icon.children[0];
+		} else {
+			return;
+		}
 	},
 
 	_updateSize: function() {
-		if (this._shape._icon) {
-			this._shape._icon.children[0].style.width = this._width + "px";
-			this._shape._icon.children[0].style.height = this._height + "px";
+		if (this._textbox._icon) {
+			this._textbox._icon.style.width = this._width + "px";
+			this._textbox._icon.style.height = this._height + "px";
 		}
 	}
 });
@@ -136,8 +165,15 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 	options: {
 		shapeOptions: {
-			color: '#000000'
+			color: '#000000',
+			editable: true
 		}
+	},
+
+	initialize: function(map, options) {
+		this.type = L.Illustrate.Create.Textbox.TYPE;
+
+		L.Draw.SimpleShape.prototype.initialize.call(this, map, options);
 	},
 
 	_drawShape: function(latlng) {
@@ -157,32 +193,14 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_fireCreatedEvent: function() {
-		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions);
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, this._shape);
 	}
 });
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
-L.Illustrate.Edit.Textbox = L.Handler.extend({
+L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({});
 
-	addHooks: function() {
-		this._enableTyping();
-	},
-
-	_enableTyping: function() {
-		this._shape.on('click', function(evt) {
-			evt.target._icon.children[0].focus();
-		});
-	}
-
-});
-
-// It may not be desirable to be adding hooks to L.Rectangle.  What if the textboxes stop using L.Rectangle?
-// Then these hooks will no longer fire.  Perhaps better to create an L.Textbox base class?
-// L.Illustrate.Create.Textbox is called when the toolbar is loaded, while L.Rectangle is not called
-// until a rectangle is *drawn* on the map.
-// Also, this is obviously NOT ideal because whenever normal rectangles are drawn, these hooks will be called as well.
-L.Rectangle.addInitHook(function() {
+L.Illustrate.Textbox.addInitHook(function() {
 	if (L.Illustrate.Edit.Textbox) {
 		this.editing = new L.Illustrate.Edit.Textbox(this);
 

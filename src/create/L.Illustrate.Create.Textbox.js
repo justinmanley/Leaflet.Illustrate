@@ -7,8 +7,15 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 	options: {
 		shapeOptions: {
-			color: '#000000'
+			color: '#000000',
+			editable: true
 		}
+	},
+
+	initialize: function(map, options) {
+		this.type = L.Illustrate.Create.Textbox.TYPE;
+
+		L.Draw.SimpleShape.prototype.initialize.call(this, map, options);
 	},
 
 	_drawShape: function(latlng) {
@@ -28,7 +35,6 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_fireCreatedEvent: function() {
-		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions);
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, this._shape);
 	}
 });
