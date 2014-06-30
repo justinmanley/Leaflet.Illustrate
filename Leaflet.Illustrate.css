@@ -3,6 +3,7 @@
   font-size: 14pt;
   color: #db1d0f;
   overflow: hidden;
+  padding: 3px;
 }
 .leaflet-illustrate-textbox textarea:focus {
   outline-color: rgba(0, 0, 0, 0);

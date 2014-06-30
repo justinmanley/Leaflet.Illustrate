@@ -80,6 +80,11 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox.setLatLng(this._latlng);
 	},
 
+	setStyle: function() {
+		// use this to change the styling of the textbox.  should accept an 'options' argument.
+		return this;
+	},
+
 	_updateSize: function() {
 		if (this._textbox._icon) {
 			this._textbox._icon.style.width = this._width + "px";
@@ -88,14 +93,41 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_enableTyping: function() {
+		var map = this._map,
+			textarea = this._textbox._icon.children[0],
+			mapDraggable;
+
+
 		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
 			event.target.focus();
+		});
+
+		L.DomEvent.on(textarea, 'focus', function(event) {
+			// not sure why this doesn't work
+			L.DomUtil.enableTextSelection();
+			L.DomEvent.off(event.target, 'selectstart', L.DomEvent.preventDefault);
+
 			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
 			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
+
+			mapDraggable = map.dragging.enabled();
+			if (mapDraggable) {
+				map.dragging.disable();
+			}
 		});
-		L.DomEvent.on(this._textbox._icon.children[0], 'blur', function(event) {
+
+		L.DomEvent.on(textarea, 'blur', function(event) {
+			// not sure why this doesn't work
+			L.DomUtil.disableTextSelection();
+			L.DomEvent.on(event.target, 'selectstart', L.DomEvent.preventDefault);
+
 			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
 			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
+
+			mapDraggable = map.dragging.enabled();
+			if (!mapDraggable) {
+				map.dragging.enable();
+			}
 		});
 	}
 });

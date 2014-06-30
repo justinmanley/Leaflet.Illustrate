@@ -86,6 +86,11 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox.setLatLng(this._latlng);
 	},
 
+	setStyle: function() {
+		// use this to change the styling of the textbox.  should accept an 'options' argument.
+		return this;
+	},
+
 	_updateSize: function() {
 		if (this._textbox._icon) {
 			this._textbox._icon.style.width = this._width + "px";
@@ -94,14 +99,41 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_enableTyping: function() {
+		var map = this._map,
+			textarea = this._textbox._icon.children[0],
+			mapDraggable;
+
+
 		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
 			event.target.focus();
+		});
+
+		L.DomEvent.on(textarea, 'focus', function(event) {
+			// not sure why this doesn't work
+			L.DomUtil.enableTextSelection();
+			L.DomEvent.off(event.target, 'selectstart', L.DomEvent.preventDefault);
+
 			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
 			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
+
+			mapDraggable = map.dragging.enabled();
+			if (mapDraggable) {
+				map.dragging.disable();
+			}
 		});
-		L.DomEvent.on(this._textbox._icon.children[0], 'blur', function(event) {
+
+		L.DomEvent.on(textarea, 'blur', function(event) {
+			// not sure why this doesn't work
+			L.DomUtil.disableTextSelection();
+			L.DomEvent.on(event.target, 'selectstart', L.DomEvent.preventDefault);
+
 			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
 			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
+
+			mapDraggable = map.dragging.enabled();
+			if (!mapDraggable) {
+				map.dragging.enable();
+			}
 		});
 	}
 });
@@ -173,8 +205,7 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 	options: {
 		shapeOptions: {
-			color: '#000000',
-			editable: true
+			color: '#000000'
 		}
 	},
 
@@ -185,15 +216,13 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_drawShape: function(latlng) {
-		var bounds = new L.LatLngBounds(this._startLatLng, latlng),
-			anchor = bounds.getCenter(),
-			upperLeft = this._map.latLngToLayerPoint(bounds.getSouthWest()).round(),
-			lowerRight = this._map.latLngToLayerPoint(bounds.getNorthEast()).round(),
-			height = upperLeft.y - lowerRight.y,
-			width = lowerRight.x - upperLeft.x;
+		var startPixelCoordinates = this._map.latLngToLayerPoint(this._startLatLng).round(),
+			latlngPixelCoordinates = this._map.latLngToLayerPoint(latlng).round(),
+			width = latlngPixelCoordinates.x - startPixelCoordinates.x,
+			height = latlngPixelCoordinates.y - startPixelCoordinates.y;
 
 		if (!this._shape) {
-			this._shape = new L.Illustrate.Textbox(anchor, this.options.shapeOptions);
+			this._shape = new L.Illustrate.Textbox(this._startLatLng, this.options.shapeOptions);
 			this._map.addLayer(this._shape);
 		}
 
@@ -208,22 +237,69 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions)
 			.setSize(this._shape.getSize());
-		if (textbox._textbox._icon) {
-			console.log('textbox._textbox._icon exists at long last');
-		}
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
-	initialize: function(shape, options) {
-		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
-		// the problem with adding icon listeners is that _initIcon (the method which creates the _icon property)
-		// is not set until the marker is added to the map
-		// i.e. it is not set until drawnItems.addLayer(layer) is called.
-		// this means that somehow I need to add a hook to be called when L.Illustrate.Textbox is added
-		// to the map.  So maybe I add a hook to shape?  Can I do that?
+	addHooks: function() {
+		L.Edit.SimpleShape.prototype.addHooks.call(this);
+	},
+
+	_createResizeMarker: function() {
+		var corners = this._getCorners();
+
+		this._resizeMarkers = [];
+
+		for (var i = 0, l = corners.length; i < l; i++) {
+			this._resizeMarkers.push(this._createMarker(corners[i], this.options.resizeIcon));
+			this._resizeMarkers[i]._cornerIndex = i;
+		}
+	},
+
+	_createMoveMarker: function() {
+
+	},
+
+	_createRotateMarker: function() {
+
+	},
+
+	_unbindMarker: function() {
+
+	},
+
+	_onMarkerDragStart: function(event) {
+		var marker = event.target,
+			latlng = marker.getLatLng();
+
+		if (marker === this._moveMarker) {
+			this._move(latlng);
+		} else if (marker === this._rotateMarker) {
+			this._rotate(latlng);
+		} else {
+			
+		}
+
+	},
+
+	_getCorners: function() {
+		var corner = this._shape.getLatLng(),
+			size = this._shape.getSize(),
+			cornerPixelCoordinates = this._map.project(corner),
+			oppositeCorner = this._map.unproject(new L.Point(
+				cornerPixelCoordinates.x + size.x,
+				cornerPixelCoordinates.y + size.y
+			)),
+			bounds = new L.LatLngBounds(corner, oppositeCorner);
+
+		var nw = bounds.getNorthWest(),
+			ne = bounds.getNorthEast(),
+			se = bounds.getSouthEast(),
+			sw = bounds.getSouthWest();
+
+		return [nw, ne, se, sw];
 	}
 });
 

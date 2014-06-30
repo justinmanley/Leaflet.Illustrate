@@ -7,8 +7,7 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 	options: {
 		shapeOptions: {
-			color: '#000000',
-			editable: true
+			color: '#000000'
 		}
 	},
 
@@ -19,15 +18,13 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 	},
 
 	_drawShape: function(latlng) {
-		var bounds = new L.LatLngBounds(this._startLatLng, latlng),
-			anchor = bounds.getCenter(),
-			upperLeft = this._map.latLngToLayerPoint(bounds.getSouthWest()).round(),
-			lowerRight = this._map.latLngToLayerPoint(bounds.getNorthEast()).round(),
-			height = upperLeft.y - lowerRight.y,
-			width = lowerRight.x - upperLeft.x;
+		var startPixelCoordinates = this._map.latLngToLayerPoint(this._startLatLng).round(),
+			latlngPixelCoordinates = this._map.latLngToLayerPoint(latlng).round(),
+			width = latlngPixelCoordinates.x - startPixelCoordinates.x,
+			height = latlngPixelCoordinates.y - startPixelCoordinates.y;
 
 		if (!this._shape) {
-			this._shape = new L.Illustrate.Textbox(anchor, this.options.shapeOptions);
+			this._shape = new L.Illustrate.Textbox(this._startLatLng, this.options.shapeOptions);
 			this._map.addLayer(this._shape);
 		}
 
@@ -42,9 +39,6 @@ L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
 
 		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions)
 			.setSize(this._shape.getSize());
-		if (textbox._textbox._icon) {
-			console.log('textbox._textbox._icon exists at long last');
-		}
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
