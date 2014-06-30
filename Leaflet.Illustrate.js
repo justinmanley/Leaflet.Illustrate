@@ -19,9 +19,6 @@ L.Illustrate.Textbox = L.Class.extend({
 		L.setOptions(this, options);
 		this._latlng = latlng;
 		this._initTextbox();
-		if (this._textbox._icon) {
-			console.log('this._textbox._icon finally exists');
-		}
 	},
 
 	_initTextbox: function() {
@@ -30,9 +27,6 @@ L.Illustrate.Textbox = L.Class.extend({
 			html: '<textarea style="width: 100%; height: 100%"></textarea>'
 		});
 		this._textbox = new L.Marker(this._latlng, { icon: textarea });
-		if (this._textbox._icon) {
-			console.log('this._textbox._icon exists');
-		}
 	},
 
 	onAdd: function(map) {
@@ -43,6 +37,8 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._updateSize();
 
 		this._enableTyping();
+
+		L.DomUtil.addClass(this._textbox._icon.children[0], 'leaflet-illustrate-textbox-outlined');
 
 		this.fire('add');
 	},
@@ -100,6 +96,12 @@ L.Illustrate.Textbox = L.Class.extend({
 	_enableTyping: function() {
 		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
 			event.target.focus();
+			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
+			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
+		});
+		L.DomEvent.on(this._textbox._icon.children[0], 'blur', function(event) {
+			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
+			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
 		});
 	}
 });
