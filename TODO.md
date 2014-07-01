@@ -24,6 +24,7 @@
 * Drawing from top-left to bottom-right works fine, now - but any other drawing direction does not work because HTMl elements cannot have negative width.  How to handle this?  It doesn't seem very practical to switch the anchor latlng, but that may be what I have to do.
 
 	* When setSize() is called, check the parity of height and width.  The parities will indicate which quadrant the box is in, and I can then reassign the latlng anchor based on the quadrant.
+	* Perhaps the easiest way to deal with this is simply to draw using a rectangle styled to look exactly like a textbox, and then to return the textbox with the _fireCreatedEvent.
 
 * Border issues:
 

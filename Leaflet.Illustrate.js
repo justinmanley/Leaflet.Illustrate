@@ -198,45 +198,32 @@ L.Map.addInitHook(function() {
 });
 L.Illustrate.Create = L.Illustrate.Create || {};
 
-L.Illustrate.Create.Textbox = L.Draw.SimpleShape.extend({
+L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	statics: {
 		TYPE: 'textbox'
 	},
 
 	options: {
 		shapeOptions: {
-			color: '#000000'
+			color: '#4387fd',
+			weight: 2,
+			fill: false,
+			opacity: 1
 		}
-	},
-
-	initialize: function(map, options) {
-		this.type = L.Illustrate.Create.Textbox.TYPE;
-
-		L.Draw.SimpleShape.prototype.initialize.call(this, map, options);
-	},
-
-	_drawShape: function(latlng) {
-		var startPixelCoordinates = this._map.latLngToLayerPoint(this._startLatLng).round(),
-			latlngPixelCoordinates = this._map.latLngToLayerPoint(latlng).round(),
-			width = latlngPixelCoordinates.x - startPixelCoordinates.x,
-			height = latlngPixelCoordinates.y - startPixelCoordinates.y;
-
-		if (!this._shape) {
-			this._shape = new L.Illustrate.Textbox(this._startLatLng, this.options.shapeOptions);
-			this._map.addLayer(this._shape);
-		}
-
-		this._shape.setSize(new L.Point(width, height));
 	},
 
 	_fireCreatedEvent: function() {
-		/* 
-		 * Need to create a new textbox because *this* is destroyed on when this.disable() 
-		 * is called from L.Draw.SimpleShape._fireCreatedEvent.
-		 */
+		var latlngs = this._shape.getLatLngs(),
+			nw = latlngs[1],
+			anchor = this._map.layerPointToLatLng(this._map.latLngToLayerPoint(nw).add(new L.Point(5, 5))),
+			oppositeCorner = latlngs[3],
+			anchorPixelCoordinates = this._map.latLngToLayerPoint(nw).round(),
+			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
+			width = oppositeCornerPixelCoordinates.x - anchorPixelCoordinates.x,
+			height = oppositeCornerPixelCoordinates.y - anchorPixelCoordinates.y;
 
-		var textbox = new L.Illustrate.Textbox(this._shape.getLatLng(), this.options.shapeOptions)
-			.setSize(this._shape.getSize());
+		var textbox = new L.Illustrate.Textbox(anchor, this.options.shapeOptions)
+			.setSize(new L.Point(width, height));
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
