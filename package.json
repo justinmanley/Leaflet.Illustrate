@@ -5,7 +5,7 @@
   "devDependencies": {
     "leaflet": "~0.7.0",
     "leaflet-draw": "0.2.3",
-    "jshint": "~2.3.0",
+    "jshint": "~2.5.1",
     "uglify-js": "~2.4.3",
     "mocha": "~1.14.0",
     "grunt": "~0.4.2",

@@ -16,15 +16,15 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 	_fireCreatedEvent: function() {
 		var latlngs = this._shape.getLatLngs(),
-			nw = latlngs[1],
-			anchor = this._map.layerPointToLatLng(this._map.latLngToLayerPoint(nw).add(new L.Point(5, 5))),
+			center = new L.LatLngBounds(latlngs).getCenter(),
+			corner = latlngs[1],
 			oppositeCorner = latlngs[3],
-			anchorPixelCoordinates = this._map.latLngToLayerPoint(nw).round(),
+			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
 			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
-			width = oppositeCornerPixelCoordinates.x - anchorPixelCoordinates.x,
-			height = oppositeCornerPixelCoordinates.y - anchorPixelCoordinates.y;
+			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
+			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
 
-		var textbox = new L.Illustrate.Textbox(anchor, this.options.shapeOptions)
+		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
 			.setSize(new L.Point(width, height));
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}

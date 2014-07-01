@@ -3,16 +3,46 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
+
+		this._createRotateMarker();
 	},
 
-	_createResizeMarker: function() {
-		var corners = this._getCorners();
+	_rotate: function(latlng) {
+		var center = this._shape.getCenter(),
+			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
+			theta;
 
-		this._resizeMarkers = [];
+		if (point.y > 0) {
+			theta = Math.PI - Math.atan(point.x / point.y);
+		} else {
+			theta = - Math.atan(point.x / point.y);
+		}
 
-		for (var i = 0, l = corners.length; i < l; i++) {
-			this._resizeMarkers.push(this._createMarker(corners[i], this.options.resizeIcon));
-			this._resizeMarkers[i]._cornerIndex = i;
+		this._shape.setRotation(theta);
+		this._updateRotateMarker();
+	},
+
+	_createRotateMarker: function() {
+		this._updateRotateMarker();
+		this._rotateMarker = this._createMarker(
+			this._rotateHandleLatLng,
+			this.options.resizeIcon,
+			'rotate'
+		);
+	},
+
+	_updateRotateMarker: function() {
+		var center = this._shape.getCenter(),
+			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
+			height = this._shape.getSize().y,
+			rotation = this._shape.getRotation();
+		this._rotateHandleLatLng = this._map.layerPointToLatLng(new L.Point(
+			centerPixelCoordinates.x + height*Math.sin(rotation),
+			centerPixelCoordinates.y - height*Math.cos(rotation)
+		));
+
+		if (this._rotateMarker) {
+			this._rotateMarker.setLatLng(this._rotateHandleLatLng);
 		}
 	},
 
@@ -20,45 +50,58 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 
 	},
 
-	_createRotateMarker: function() {
+	_createResizeMarker: function() {
 
 	},
 
-	_unbindMarker: function() {
-
-	},
-
-	_onMarkerDragStart: function(event) {
+	_onMarkerDrag: function(event) {
 		var marker = event.target,
 			latlng = marker.getLatLng();
 
-		if (marker === this._moveMarker) {
-			this._move(latlng);
-		} else if (marker === this._rotateMarker) {
+		switch (marker._handleType) {
+		case 'rotate':
 			this._rotate(latlng);
-		} else {
-			
+			break;
+
+		case 'resize':
+			console.log('hi');
+			break;
+
+		case 'move':
+			console.log('hi');
+			break;
 		}
+	},
+
+	_onMarkerDragStart: function() {
+		this._shape.fire('editstart');
+	},
+
+	_onMarkerDragEnd: function() {
 
 	},
 
-	_getCorners: function() {
-		var corner = this._shape.getLatLng(),
-			size = this._shape.getSize(),
-			cornerPixelCoordinates = this._map.project(corner),
-			oppositeCorner = this._map.unproject(new L.Point(
-				cornerPixelCoordinates.x + size.x,
-				cornerPixelCoordinates.y + size.y
-			)),
-			bounds = new L.LatLngBounds(corner, oppositeCorner);
+	_createMarker: function(latlng, icon, type) {
+		var marker = new L.Marker(latlng, {
+			draggable: true,
+			icon: icon,
+			zIndexOffset: 10
+		});
+		marker._handleType = type;
 
-		var nw = bounds.getNorthWest(),
-			ne = bounds.getNorthEast(),
-			se = bounds.getSouthEast(),
-			sw = bounds.getSouthWest();
+		this._bindListeners(marker);
+		this._markerGroup.addLayer(marker);
 
-		return [nw, ne, se, sw];
+		return marker;
+	},
+
+	_bindListeners: function(marker) {
+		marker
+			.on('dragstart', this._onMarkerDragStart, this)
+			.on('drag', this._onMarkerDrag, this)
+			.on('dragend', this._onMarkerDragEnd, this);
 	}
+
 });
 
 L.Illustrate.Textbox.addInitHook(function() {

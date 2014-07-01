@@ -72,30 +72,7 @@ module.exports = function(grunt) {
                 trailing: true,
                 smarttabs: true,
                 globals: {
-                    angular: false,
-                    L: false,
-                    lvector: false,
-                    // Jasmine
-                    jasmine    : false,
-                    isCommonJS : false,
-                    exports    : false,
-                    spyOn      : false,
-                    it         : false,
-                    xit        : false,
-                    expect     : false,
-                    runs       : false,
-                    waits      : false,
-                    waitsFor   : false,
-                    beforeEach : false,
-                    afterEach  : false,
-                    describe   : false,
-                    xdescribe   : false,
-
-                    // Protractor
-                    protractor: false,
-                    browser: false,
-                    by: false,
-                    element: false
+                    L: false
                 }
             },
             source: {

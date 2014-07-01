@@ -12,13 +12,15 @@ L.Illustrate.Textbox = L.Class.extend({
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 		this._latlng = latlng;
+		this._rotation = 0;
 		this._initTextbox();
 	},
 
 	_initTextbox: function() {
 		var textarea = new L.DivIcon({
 			className: 'leaflet-illustrate-textbox',
-			html: '<textarea style="width: 100%; height: 100%"></textarea>'
+			html: '<textarea style="width: 100%; height: 100%"></textarea>',
+			iconAnchor: new L.Point(0, 0)
 		});
 		this._textbox = new L.Marker(this._latlng, { icon: textarea });
 	},
@@ -27,7 +29,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._map = map;
 
 		this._map.addLayer(this._textbox);
-		this._updateLatLng();
+		this._updateCenter();
 		this._updateSize();
 
 		this._enableTyping();
@@ -51,7 +53,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox = null;
 	},
 
-	setLatLng: function(latlng) {
+	setCenter: function(latlng) {
 		this._latlng = latlng;
 
 		this._updateLatLng();
@@ -59,7 +61,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	getLatLng: function() {
+	getCenter: function() {
 		return this._latlng;
 	},
 
@@ -76,7 +78,16 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	_updateLatLng: function() {
+	setRotation: function(theta) {
+		this._rotation = theta % (2*Math.PI);
+		return this;
+	},
+
+	getRotation: function() {
+		return this._rotation;
+	},
+
+	_updateCenter: function() {
 		this._textbox.setLatLng(this._latlng);
 	},
 
@@ -87,6 +98,8 @@ L.Illustrate.Textbox = L.Class.extend({
 
 	_updateSize: function() {
 		if (this._textbox._icon) {
+			this._textbox._icon.style.marginTop = - Math.round(this._height/2) + "px";
+			this._textbox._icon.style.marginLeft = - Math.round(this._width/2) + "px";
 			this._textbox._icon.style.width = this._width + "px";
 			this._textbox._icon.style.height = this._height + "px";
 		}

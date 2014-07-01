@@ -18,13 +18,15 @@ L.Illustrate.Textbox = L.Class.extend({
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 		this._latlng = latlng;
+		this._rotation = 0;
 		this._initTextbox();
 	},
 
 	_initTextbox: function() {
 		var textarea = new L.DivIcon({
 			className: 'leaflet-illustrate-textbox',
-			html: '<textarea style="width: 100%; height: 100%"></textarea>'
+			html: '<textarea style="width: 100%; height: 100%"></textarea>',
+			iconAnchor: new L.Point(0, 0)
 		});
 		this._textbox = new L.Marker(this._latlng, { icon: textarea });
 	},
@@ -33,7 +35,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._map = map;
 
 		this._map.addLayer(this._textbox);
-		this._updateLatLng();
+		this._updateCenter();
 		this._updateSize();
 
 		this._enableTyping();
@@ -57,7 +59,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox = null;
 	},
 
-	setLatLng: function(latlng) {
+	setCenter: function(latlng) {
 		this._latlng = latlng;
 
 		this._updateLatLng();
@@ -65,7 +67,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	getLatLng: function() {
+	getCenter: function() {
 		return this._latlng;
 	},
 
@@ -82,7 +84,16 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	_updateLatLng: function() {
+	setRotation: function(theta) {
+		this._rotation = theta % (2*Math.PI);
+		return this;
+	},
+
+	getRotation: function() {
+		return this._rotation;
+	},
+
+	_updateCenter: function() {
 		this._textbox.setLatLng(this._latlng);
 	},
 
@@ -93,6 +104,8 @@ L.Illustrate.Textbox = L.Class.extend({
 
 	_updateSize: function() {
 		if (this._textbox._icon) {
+			this._textbox._icon.style.marginTop = - Math.round(this._height/2) + "px";
+			this._textbox._icon.style.marginLeft = - Math.round(this._width/2) + "px";
 			this._textbox._icon.style.width = this._width + "px";
 			this._textbox._icon.style.height = this._height + "px";
 		}
@@ -214,15 +227,15 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 	_fireCreatedEvent: function() {
 		var latlngs = this._shape.getLatLngs(),
-			nw = latlngs[1],
-			anchor = this._map.layerPointToLatLng(this._map.latLngToLayerPoint(nw).add(new L.Point(5, 5))),
+			center = new L.LatLngBounds(latlngs).getCenter(),
+			corner = latlngs[1],
 			oppositeCorner = latlngs[3],
-			anchorPixelCoordinates = this._map.latLngToLayerPoint(nw).round(),
+			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
 			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
-			width = oppositeCornerPixelCoordinates.x - anchorPixelCoordinates.x,
-			height = oppositeCornerPixelCoordinates.y - anchorPixelCoordinates.y;
+			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
+			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
 
-		var textbox = new L.Illustrate.Textbox(anchor, this.options.shapeOptions)
+		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
 			.setSize(new L.Point(width, height));
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
@@ -232,16 +245,46 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
+
+		this._createRotateMarker();
 	},
 
-	_createResizeMarker: function() {
-		var corners = this._getCorners();
+	_rotate: function(latlng) {
+		var center = this._shape.getCenter(),
+			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
+			theta;
 
-		this._resizeMarkers = [];
+		if (point.y > 0) {
+			theta = Math.PI - Math.atan(point.x / point.y);
+		} else {
+			theta = - Math.atan(point.x / point.y);
+		}
 
-		for (var i = 0, l = corners.length; i < l; i++) {
-			this._resizeMarkers.push(this._createMarker(corners[i], this.options.resizeIcon));
-			this._resizeMarkers[i]._cornerIndex = i;
+		this._shape.setRotation(theta);
+		this._updateRotateMarker();
+	},
+
+	_createRotateMarker: function() {
+		this._updateRotateMarker();
+		this._rotateMarker = this._createMarker(
+			this._rotateHandleLatLng,
+			this.options.resizeIcon,
+			'rotate'
+		);
+	},
+
+	_updateRotateMarker: function() {
+		var center = this._shape.getCenter(),
+			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
+			height = this._shape.getSize().y,
+			rotation = this._shape.getRotation();
+		this._rotateHandleLatLng = this._map.layerPointToLatLng(new L.Point(
+			centerPixelCoordinates.x + height*Math.sin(rotation),
+			centerPixelCoordinates.y - height*Math.cos(rotation)
+		));
+
+		if (this._rotateMarker) {
+			this._rotateMarker.setLatLng(this._rotateHandleLatLng);
 		}
 	},
 
@@ -249,45 +292,58 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 
 	},
 
-	_createRotateMarker: function() {
+	_createResizeMarker: function() {
 
 	},
 
-	_unbindMarker: function() {
-
-	},
-
-	_onMarkerDragStart: function(event) {
+	_onMarkerDrag: function(event) {
 		var marker = event.target,
 			latlng = marker.getLatLng();
 
-		if (marker === this._moveMarker) {
-			this._move(latlng);
-		} else if (marker === this._rotateMarker) {
+		switch (marker._handleType) {
+		case 'rotate':
 			this._rotate(latlng);
-		} else {
-			
+			break;
+
+		case 'resize':
+			console.log('hi');
+			break;
+
+		case 'move':
+			console.log('hi');
+			break;
 		}
+	},
+
+	_onMarkerDragStart: function() {
+		this._shape.fire('editstart');
+	},
+
+	_onMarkerDragEnd: function() {
 
 	},
 
-	_getCorners: function() {
-		var corner = this._shape.getLatLng(),
-			size = this._shape.getSize(),
-			cornerPixelCoordinates = this._map.project(corner),
-			oppositeCorner = this._map.unproject(new L.Point(
-				cornerPixelCoordinates.x + size.x,
-				cornerPixelCoordinates.y + size.y
-			)),
-			bounds = new L.LatLngBounds(corner, oppositeCorner);
+	_createMarker: function(latlng, icon, type) {
+		var marker = new L.Marker(latlng, {
+			draggable: true,
+			icon: icon,
+			zIndexOffset: 10
+		});
+		marker._handleType = type;
 
-		var nw = bounds.getNorthWest(),
-			ne = bounds.getNorthEast(),
-			se = bounds.getSouthEast(),
-			sw = bounds.getSouthWest();
+		this._bindListeners(marker);
+		this._markerGroup.addLayer(marker);
 
-		return [nw, ne, se, sw];
+		return marker;
+	},
+
+	_bindListeners: function(marker) {
+		marker
+			.on('dragstart', this._onMarkerDragStart, this)
+			.on('drag', this._onMarkerDrag, this)
+			.on('dragend', this._onMarkerDragEnd, this);
 	}
+
 });
 
 L.Illustrate.Textbox.addInitHook(function() {
