@@ -86,11 +86,33 @@ L.Illustrate.Textbox = L.Class.extend({
 
 	setRotation: function(theta) {
 		this._rotation = theta % (2*Math.PI);
+		this._updateRotation();
 		return this;
 	},
 
 	getRotation: function() {
 		return this._rotation;
+	},
+
+	_updateRotation: function() {
+		var degrees = Math.round(this._rotation*(180/Math.PI)),
+			rotationString = "rotate(" + degrees + "deg)",
+			size = this.getSize(),
+			translateString = "",
+			center;
+
+		if (this._map) {
+			center = this._map.latLngToContainerPoint(this._latlng);
+			translateString = "translate(" + center.x + "px, " + center.y + "px)";
+
+			this._textbox._icon.style["-webkit-transform-origin"] = (center.x + Math.round(size.x/2)) + "px " + (center.y + Math.round(size.y/2)) + "px";
+		}
+
+		this._textbox._icon.style["-webkit-transform"] = rotationString + " " + translateString;
+		this._textbox._icon.style["-o-transform"] = rotationString + " " + translateString;
+		this._textbox._icon.style["-ms-transform"] = rotationString + " " + translateString;
+		this._textbox._icon.style["-moz-transform"] = rotationString + " " + translateString;
+		this._textbox._icon.style.transform = rotationString + " " + translateString;
 	},
 
 	_updateCenter: function() {
