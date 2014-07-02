@@ -4,6 +4,34 @@
 
 L.Illustrate = {};
 
+if (L.DomUtil) {
+	L.DomUtil.getRotateString = function(angle, units) {
+		var is3d = L.Browser.webkit3d,
+			open = 'rotate' + (is3d ? '3d' : '') + '(',
+			rotateString = (is3d ? '0, 0, 1, ' : '') + angle + units;
+			
+		return open + rotateString + ')';
+	};
+}
+if (L.DomUtil) {
+	L.DomUtil.setTransform = function (el, point, angle, disable3D) {
+
+		// jshint camelcase: false
+		el._leaflet_pos = point;
+
+		if (!disable3D && L.Browser.any3d) {
+			el.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(point);
+			el.style[L.DomUtil.TRANSFORM] = el.style[L.DomUtil.TRANSFORM] + " " + L.DomUtil.getRotateString(angle, 'deg');
+		} else {
+			// if 3d is disabled, then there is no rotation at all
+			el.style.left = point.x + 'px';
+			el.style.top = point.y + 'px';
+		}
+
+		console.log(L.DomUtil.getTranslateString(point));
+		// console.log(el.style[L.DomUtil.TRANSFORM]);
+	};
+}
 L.Illustrate.Textbox = L.Class.extend({
 	statics: {
 		TYPE: 'textbox'
@@ -18,7 +46,6 @@ L.Illustrate.Textbox = L.Class.extend({
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 		this._latlng = latlng;
-		this._rotation = 0;
 		this._initTextbox();
 	},
 
@@ -28,7 +55,7 @@ L.Illustrate.Textbox = L.Class.extend({
 			html: '<textarea style="width: 100%; height: 100%"></textarea>',
 			iconAnchor: new L.Point(0, 0)
 		});
-		this._textbox = new L.Marker(this._latlng, { icon: textarea });
+		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
 	},
 
 	onAdd: function(map) {
@@ -85,34 +112,15 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setRotation: function(theta) {
-		this._rotation = theta % (2*Math.PI);
-		this._updateRotation();
+		var degrees = Math.round((theta % 360)*(180/Math.PI));
+
+		this._textbox.setRotation(degrees);
+		this._textbox.update();
 		return this;
 	},
 
 	getRotation: function() {
-		return this._rotation;
-	},
-
-	_updateRotation: function() {
-		var degrees = Math.round(this._rotation*(180/Math.PI)),
-			rotationString = "rotate(" + degrees + "deg)",
-			size = this.getSize(),
-			translateString = "",
-			center;
-
-		if (this._map) {
-			center = this._map.latLngToContainerPoint(this._latlng);
-			translateString = "translate(" + center.x + "px, " + center.y + "px)";
-
-			this._textbox._icon.style["-webkit-transform-origin"] = (center.x + Math.round(size.x/2)) + "px " + (center.y + Math.round(size.y/2)) + "px";
-		}
-
-		this._textbox._icon.style["-webkit-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-o-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-ms-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-moz-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style.transform = rotationString + " " + translateString;
+		return this._textbox.getRotation();
 	},
 
 	_updateCenter: function() {
@@ -231,6 +239,32 @@ L.Map.addInitHook(function() {
 		this.addControl(this.illustrateControl);
 	}
 });
+L.RotatableMarker = L.Marker.extend({
+	initialize: function(latlng, options) {
+		L.Marker.prototype.initialize.call(this, latlng, options);
+		this.setRotation(options.rotation || 0);
+	},
+
+	setRotation: function(theta) {
+		this._rotation = theta;
+	},
+
+	getRotation: function() {
+		return this._rotation;
+	},
+
+	_setPos: function(pos) {
+		L.DomUtil.setTransform(this._icon, pos, this._rotation);
+
+		if (this._shadow) {
+			L.DomUtil.setTransform(this._shadow, pos, this._rotation);
+		}
+
+		this._zIndex = pos.y + this.options.zIndexOffset;
+
+		this._resetZIndex();
+	}
+});
 L.Illustrate.Create = L.Illustrate.Create || {};
 
 L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
@@ -267,6 +301,11 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
+
+		this._map.on('zoomend', function() {
+			this._updateRotateMarker();
+			this._rotate(this._rotateHandleLatLng);
+		}, this);
 
 		this._createRotateMarker();
 	},

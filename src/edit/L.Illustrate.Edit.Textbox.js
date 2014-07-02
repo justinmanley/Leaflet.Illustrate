@@ -4,6 +4,11 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
+		this._map.on('zoomend', function() {
+			this._updateRotateMarker();
+			this._rotate(this._rotateHandleLatLng);
+		}, this);
+
 		this._createRotateMarker();
 	},
 

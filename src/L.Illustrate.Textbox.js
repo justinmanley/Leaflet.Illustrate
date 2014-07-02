@@ -12,7 +12,6 @@ L.Illustrate.Textbox = L.Class.extend({
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 		this._latlng = latlng;
-		this._rotation = 0;
 		this._initTextbox();
 	},
 
@@ -22,7 +21,7 @@ L.Illustrate.Textbox = L.Class.extend({
 			html: '<textarea style="width: 100%; height: 100%"></textarea>',
 			iconAnchor: new L.Point(0, 0)
 		});
-		this._textbox = new L.Marker(this._latlng, { icon: textarea });
+		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
 	},
 
 	onAdd: function(map) {
@@ -79,34 +78,15 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setRotation: function(theta) {
-		this._rotation = theta % (2*Math.PI);
-		this._updateRotation();
+		var degrees = Math.round((theta % 360)*(180/Math.PI));
+
+		this._textbox.setRotation(degrees);
+		this._textbox.update();
 		return this;
 	},
 
 	getRotation: function() {
-		return this._rotation;
-	},
-
-	_updateRotation: function() {
-		var degrees = Math.round(this._rotation*(180/Math.PI)),
-			rotationString = "rotate(" + degrees + "deg)",
-			size = this.getSize(),
-			translateString = "",
-			center;
-
-		if (this._map) {
-			center = this._map.latLngToContainerPoint(this._latlng);
-			translateString = "translate(" + center.x + "px, " + center.y + "px)";
-
-			this._textbox._icon.style["-webkit-transform-origin"] = (center.x + Math.round(size.x/2)) + "px " + (center.y + Math.round(size.y/2)) + "px";
-		}
-
-		this._textbox._icon.style["-webkit-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-o-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-ms-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style["-moz-transform"] = rotationString + " " + translateString;
-		this._textbox._icon.style.transform = rotationString + " " + translateString;
+		return this._textbox.getRotation();
 	},
 
 	_updateCenter: function() {

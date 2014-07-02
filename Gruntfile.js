@@ -127,7 +127,7 @@ module.exports = function(grunt) {
                 },
                 src: [
                     'src/L.Illustrate.js',
-                    'src/L.Illustrate.*.js',
+                    'src/*.js',
                     'src/*/*.js'
                 ],
                 dest: 'Leaflet.Illustrate.js',
