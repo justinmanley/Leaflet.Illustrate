@@ -29,6 +29,13 @@ if (L.DomUtil) {
 		}
 	};
 }
+L.Map.include({
+	_newLayerPointToLatLng: function(point, newZoom, newCenter) {
+		var topLeft = L.Map.prototype._getNewTopLeftPoint.call(this, newCenter, newZoom)
+				.add(L.Map.prototype._getMapPanePos.call(this));
+		return this.unproject(point.add(topLeft), newZoom);
+	}
+});
 L.RotatableMarker = L.Marker.extend({
 	initialize: function(latlng, options) {
 		L.Marker.prototype.initialize.call(this, latlng, options);
@@ -85,13 +92,6 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			.setSize(new L.Point(width, height));
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
-});
-L.Illustrate.DragHandle = L.RotatableMarker.extend({
-	_animateZoom: function (opt) {
-		var pos = this._map._latLngToNewLayerPoint(this._latlng, opt.zoom, opt.center).round();
-
-		this._setPos(pos);
-	},
 });
 L.Illustrate.Textbox = L.Class.extend({
 	statics: {
@@ -304,52 +304,18 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
-		this._map.on('zoomstart', function() {
-			this._updateRotateMarker();
-			this._rotate(this._rotateHandleLatLng);
-		}, this);
-
-		this._createRotateMarker();
+		this._bindRotateMarker();
 	},
 
-	_rotate: function(latlng) {
-		var center = this._shape.getCenter(),
-			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
-			theta;
+	_bindRotateMarker: function() {
+		var height = this._shape.getSize().y;
 
-		if (point.y > 0) {
-			theta = Math.PI - Math.atan(point.x / point.y);
-		} else {
-			theta = - Math.atan(point.x / point.y);
-		}
-
-		this._shape.setRotation(theta);
-		this._updateRotateMarker();
-	},
-
-	_createRotateMarker: function() {
-		this._updateRotateMarker();
-		this._rotateMarker = this._createMarker(
-			this._rotateHandleLatLng,
-			this.options.resizeIcon,
-			'rotate'
-		);
-	},
-
-	_updateRotateMarker: function() {
-		var center = this._shape.getCenter(),
-			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
-			height = this._shape.getSize().y,
-			rotation = this._shape.getRotation();
-
-		this._rotateHandleLatLng = this._map.layerPointToLatLng(new L.Point(
-			centerPixelCoordinates.x + height*Math.sin(rotation),
-			centerPixelCoordinates.y - height*Math.cos(rotation)
-		));
-
-		if (this._rotateMarker) {
-			this._rotateMarker.setLatLng(this._rotateHandleLatLng);
-		}
+		this._rotateMarker = new L.Illustrate.EditHandle(this._shape, {
+			type: 'rotate',
+			offsetX: 0,
+			offsetY: height
+		});
+		this._markerGroup.addLayer(this._rotateMarker);
 	},
 
 	_createMoveMarker: function() {
@@ -358,15 +324,96 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 
 	_createResizeMarker: function() {
 
+	}
+
+});
+
+L.Illustrate.Textbox.addInitHook(function() {
+	if (L.Illustrate.Edit.Textbox) {
+		this.editing = new L.Illustrate.Edit.Textbox(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+});
+L.Illustrate.EditHandle = L.RotatableMarker.extend({
+	options: {
+		moveIcon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
+		}),
+		resizeIcon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-resize'
+		})
 	},
 
-	_onMarkerDrag: function(event) {
-		var marker = event.target,
-			latlng = marker.getLatLng();
+	initialize: function(shape, options) {
+		this._offsetX = options.offsetX || 0;
+		this._offsetY = options.offsetY || 0;
+		this._handleType = options.type;
+		this._handled = shape;
+		this._zoom = this._handled._map.getZoom();
 
-		switch (marker._handleType) {
+		var center = this._handled.getCenter(),
+			rotation = this._handled.getRotation(),
+			centerPixelCoordinates = this._handled._map.latLngToLayerPoint(center),
+			latlng = this._handled._map.layerPointToLatLng(new L.Point(
+				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
+				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
+			));
+
+		L.RotatableMarker.prototype.initialize.call(this, latlng, {
+			draggable: true,
+			icon: this.options.resizeIcon,
+			zIndexOffset: 10
+		});
+
+		this._bindListeners();
+	},
+
+	_animateZoom: function(opt) {
+		var center = this._handled.getCenter(),
+			rotation = this._handled.getRotation(),
+			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
+			handleLatLng = this._handled._map._newLayerPointToLatLng(new L.Point(
+				newCenterPixelCoordinates.x + this._offsetY*Math.sin(rotation),
+				newCenterPixelCoordinates.y - this._offsetY*Math.cos(rotation)
+			), opt.zoom, opt.center),
+			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
+
+		this._setPos(pos);
+	},
+
+	_update: function() {
+		var center = this._handled.getCenter(),
+			rotation = this._handled.getRotation(),
+			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
+			latlng = this._map.layerPointToLatLng(new L.Point(
+				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
+				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
+			));
+		this.setLatLng(latlng);
+	},
+
+	_onHandleDrag: function(event) {
+		var handle = event.target,
+			latlng = handle.getLatLng();
+
+		switch (this._handleType) {
 		case 'rotate':
-			this._rotate(latlng);
+			var center = this._handled.getCenter(),
+				point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
+				theta;
+
+			if (point.y > 0) {
+				theta = Math.PI - Math.atan(point.x / point.y);
+			} else {
+				theta = - Math.atan(point.x / point.y);
+			}
+			this._handled.setRotation(theta);
+			this._update();
 			break;
 
 		case 'resize':
@@ -379,44 +426,20 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 		}
 	},
 
-	_onMarkerDragStart: function() {
-		this._shape.fire('editstart');
+	_onHandleDragStart: function() {
+		this._handled.fire('editstart');
 	},
 
-	_onMarkerDragEnd: function() {
+	_onHandleDragEnd: function() {
 
 	},
 
-	_createMarker: function(latlng, icon, type) {
-		var marker = new L.Marker(latlng, {
-			draggable: true,
-			icon: icon,
-			zIndexOffset: 10
-		});
-		marker._handleType = type;
-
-		this._bindListeners(marker);
-		this._markerGroup.addLayer(marker);
-
-		return marker;
-	},
-
-	_bindListeners: function(marker) {
-		marker
-			.on('dragstart', this._onMarkerDragStart, this)
-			.on('drag', this._onMarkerDrag, this)
-			.on('dragend', this._onMarkerDragEnd, this);
-	}
-
-});
-
-L.Illustrate.Textbox.addInitHook(function() {
-	if (L.Illustrate.Edit.Textbox) {
-		this.editing = new L.Illustrate.Edit.Textbox(this);
-
-		if (this.options.editable) {
-			this.editing.enable();
-		}
+	_bindListeners: function() {
+		this
+			.on('dragstart', this._onHandleDragStart, this)
+			.on('drag', this._onHandleDrag, this)
+			.on('dragend', this._onHandleDragEnd, this);
+		this._handled._map.on('zoomend', this._update, this);
 	}
 });
 
