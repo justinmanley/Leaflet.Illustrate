@@ -21,17 +21,78 @@ if (L.DomUtil) {
 
 		if (!disable3D && L.Browser.any3d) {
 			el.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(point);
-			el.style[L.DomUtil.TRANSFORM] = el.style[L.DomUtil.TRANSFORM] + " " + L.DomUtil.getRotateString(angle, 'deg');
+			el.style[L.DomUtil.TRANSFORM] = el.style[L.DomUtil.TRANSFORM] + " " + L.DomUtil.getRotateString(angle, 'rad');
 		} else {
 			// if 3d is disabled, then there is no rotation at all
 			el.style.left = point.x + 'px';
 			el.style.top = point.y + 'px';
 		}
-
-		console.log(L.DomUtil.getTranslateString(point));
-		// console.log(el.style[L.DomUtil.TRANSFORM]);
 	};
 }
+L.RotatableMarker = L.Marker.extend({
+	initialize: function(latlng, options) {
+		L.Marker.prototype.initialize.call(this, latlng, options);
+		this.setRotation(options.rotation || 0);
+	},
+
+	setRotation: function(theta) {
+		this._rotation = theta;
+	},
+
+	getRotation: function() {
+		return this._rotation;
+	},
+
+	_setPos: function(pos) {
+		L.DomUtil.setTransform(this._icon, pos, this._rotation);
+
+		if (this._shadow) {
+			L.DomUtil.setTransform(this._shadow, pos, this._rotation);
+		}
+
+		this._zIndex = pos.y + this.options.zIndexOffset;
+
+		this._resetZIndex();
+	}
+});
+L.Illustrate.Create = L.Illustrate.Create || {};
+
+L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
+	statics: {
+		TYPE: 'textbox'
+	},
+
+	options: {
+		shapeOptions: {
+			color: '#4387fd',
+			weight: 2,
+			fill: false,
+			opacity: 1
+		}
+	},
+
+	_fireCreatedEvent: function() {
+		var latlngs = this._shape.getLatLngs(),
+			center = new L.LatLngBounds(latlngs).getCenter(),
+			corner = latlngs[1],
+			oppositeCorner = latlngs[3],
+			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
+			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
+			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
+			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
+
+		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
+			.setSize(new L.Point(width, height));
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+	}
+});
+L.Illustrate.DragHandle = L.RotatableMarker.extend({
+	_animateZoom: function (opt) {
+		var pos = this._map._latLngToNewLayerPoint(this._latlng, opt.zoom, opt.center).round();
+
+		this._setPos(pos);
+	},
+});
 L.Illustrate.Textbox = L.Class.extend({
 	statics: {
 		TYPE: 'textbox'
@@ -112,9 +173,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setRotation: function(theta) {
-		var degrees = Math.round((theta % 360)*(180/Math.PI));
-
-		this._textbox.setRotation(degrees);
+		this._textbox.setRotation(theta % (2*Math.PI));
 		this._textbox.update();
 		return this;
 	},
@@ -239,70 +298,13 @@ L.Map.addInitHook(function() {
 		this.addControl(this.illustrateControl);
 	}
 });
-L.RotatableMarker = L.Marker.extend({
-	initialize: function(latlng, options) {
-		L.Marker.prototype.initialize.call(this, latlng, options);
-		this.setRotation(options.rotation || 0);
-	},
-
-	setRotation: function(theta) {
-		this._rotation = theta;
-	},
-
-	getRotation: function() {
-		return this._rotation;
-	},
-
-	_setPos: function(pos) {
-		L.DomUtil.setTransform(this._icon, pos, this._rotation);
-
-		if (this._shadow) {
-			L.DomUtil.setTransform(this._shadow, pos, this._rotation);
-		}
-
-		this._zIndex = pos.y + this.options.zIndexOffset;
-
-		this._resetZIndex();
-	}
-});
-L.Illustrate.Create = L.Illustrate.Create || {};
-
-L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
-	statics: {
-		TYPE: 'textbox'
-	},
-
-	options: {
-		shapeOptions: {
-			color: '#4387fd',
-			weight: 2,
-			fill: false,
-			opacity: 1
-		}
-	},
-
-	_fireCreatedEvent: function() {
-		var latlngs = this._shape.getLatLngs(),
-			center = new L.LatLngBounds(latlngs).getCenter(),
-			corner = latlngs[1],
-			oppositeCorner = latlngs[3],
-			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
-			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
-			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
-			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
-
-		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
-			.setSize(new L.Point(width, height));
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
-	}
-});
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
-		this._map.on('zoomend', function() {
+		this._map.on('zoomstart', function() {
 			this._updateRotateMarker();
 			this._rotate(this._rotateHandleLatLng);
 		}, this);
@@ -339,6 +341,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
 			height = this._shape.getSize().y,
 			rotation = this._shape.getRotation();
+
 		this._rotateHandleLatLng = this._map.layerPointToLatLng(new L.Point(
 			centerPixelCoordinates.x + height*Math.sin(rotation),
 			centerPixelCoordinates.y - height*Math.cos(rotation)

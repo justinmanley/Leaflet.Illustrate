@@ -78,9 +78,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setRotation: function(theta) {
-		var degrees = Math.round((theta % 360)*(180/Math.PI));
-
-		this._textbox.setRotation(degrees);
+		this._textbox.setRotation(theta % (2*Math.PI));
 		this._textbox.update();
 		return this;
 	},

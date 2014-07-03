@@ -100,8 +100,10 @@ module.exports = function(grunt) {
             },
             source: {
                 files: [
+                    'src/extends-core/*.js',
                     'src/*.js',
-                    'src/*/*.js',
+                    'src/create/*.js',
+                    'src/edit/*.js',
                     'src/Leaflet.Illustrate.less',
                     'Gruntfile.js'
                 ],
@@ -127,8 +129,10 @@ module.exports = function(grunt) {
                 },
                 src: [
                     'src/L.Illustrate.js',
-                    'src/*.js',
-                    'src/*/*.js'
+                    'src/extends-core/*.js',
+                    'src/create/*.js',
+                    'src/L.Illustrate.*.js',
+                    'src/edit/*.js'
                 ],
                 dest: 'Leaflet.Illustrate.js',
             }

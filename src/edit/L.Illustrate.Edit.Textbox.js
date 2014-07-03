@@ -4,7 +4,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
-		this._map.on('zoomend', function() {
+		this._map.on('zoomstart', function() {
 			this._updateRotateMarker();
 			this._rotate(this._rotateHandleLatLng);
 		}, this);
@@ -41,6 +41,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
 			height = this._shape.getSize().y,
 			rotation = this._shape.getRotation();
+
 		this._rotateHandleLatLng = this._map.layerPointToLatLng(new L.Point(
 			centerPixelCoordinates.x + height*Math.sin(rotation),
 			centerPixelCoordinates.y - height*Math.cos(rotation)
