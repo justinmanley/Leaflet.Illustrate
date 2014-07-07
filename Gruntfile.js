@@ -72,14 +72,24 @@ module.exports = function(grunt) {
                 trailing: true,
                 smarttabs: true,
                 globals: {
-                    L: false
+                    L: false,
+
+                    // Mocha
+
+                    describe: false,
+                    it: false,
+                    before: false,
+                    after: false,
+                    beforeEach: false,
+                    afterEach: false,
+                    chai: false
                 }
             },
             source: {
                 src: [ 'src/*.js', 'src/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
             tests: {
-                src: [],
+                src: [ 'test/*.js' ],
             },
             grunt: {
                 src: ['Gruntfile.js']
@@ -94,6 +104,13 @@ module.exports = function(grunt) {
             }
         },
 
+        mocha: {
+            test: {
+                options: { run: true },
+                src: [ 'test/*.html' ]
+            }
+        },
+
         watch: {
             options : {
                 livereload: 7777
@@ -105,12 +122,14 @@ module.exports = function(grunt) {
                     'src/create/*.js',
                     'src/edit/*.js',
                     'src/Leaflet.Illustrate.less',
+                    'test/*',
                     'Gruntfile.js'
                 ],
                 tasks: [
                     'jshint',
                     'concat:dist',
-                    'less'
+                    'less',
+                    'mocha'
                 ]
             }
         },
@@ -140,7 +159,7 @@ module.exports = function(grunt) {
     });
 
     //single run tests
-    grunt.registerTask('test', ['jshint']);
+    grunt.registerTask('test', ['jshint:tests', 'mocha']);
 
     //defaults
     grunt.registerTask('default', ['watch:source']);

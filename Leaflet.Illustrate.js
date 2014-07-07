@@ -304,28 +304,48 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
-		this._bindRotateMarker();
+		this._bindRotateHandle();
+		this._bindResizeHandles();
 	},
 
-	_bindRotateMarker: function() {
-		var height = this._shape.getSize().y;
-
-		this._rotateMarker = new L.Illustrate.EditHandle(this._shape, {
-			type: 'rotate',
-			offsetX: 0,
-			offsetY: height
+	_bindRotateHandle: function() {
+		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
+			offset: new L.Point(0, this._shape.getSize().y)
 		});
-		this._markerGroup.addLayer(this._rotateMarker);
+		this._markerGroup.addLayer(this._rotateHandle);
 	},
 
-	_createMoveMarker: function() {
+	_bindMoveHandle: function() {
 
 	},
 
-	_createResizeMarker: function() {
+	_bindResizeHandles: function() {
+		var size = this._shape.getSize(),
+			height = Math.round(size.y/2),
+			width = Math.round(size.x/2),
+			upperLeft = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(-width, height),
+				corner: 'upper-left'
+			}),
+			upperRight = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(width, height),
+				corner: 'upper-right'
+			}),
+			lowerLeft = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(-width, -height),
+				corner: 'lower-left'
+			}),
+			lowerRight = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(width, -height),
+				corner: 'lower-right'
+			});
 
+		this._resizeHandles = [ upperLeft, upperRight, lowerLeft, lowerRight ];
+
+		for (var i = 0; i < this._resizeHandles.length; i++) {
+			this._markerGroup.addLayer(this._resizeHandles[i]);
+		}
 	}
-
 });
 
 L.Illustrate.Textbox.addInitHook(function() {
@@ -350,19 +370,13 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	initialize: function(shape, options) {
-		this._offsetX = options.offsetX || 0;
-		this._offsetY = options.offsetY || 0;
-		this._handleType = options.type;
+		this._offsetX = options.offset.x || 0;
+		this._offsetY = options.offset.y || 0;
 		this._handled = shape;
-		this._zoom = this._handled._map.getZoom();
 
 		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
 			centerPixelCoordinates = this._handled._map.latLngToLayerPoint(center),
-			latlng = this._handled._map.layerPointToLatLng(new L.Point(
-				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			));
+			latlng = this._handled._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, {
 			draggable: true,
@@ -375,55 +389,24 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	_animateZoom: function(opt) {
 		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
 			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
-			handleLatLng = this._handled._map._newLayerPointToLatLng(new L.Point(
-				newCenterPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				newCenterPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			), opt.zoom, opt.center),
+			handleLatLng = this._handled._map._newLayerPointToLatLng(
+				this._calculateOffset(newCenterPixelCoordinates),
+				opt.zoom,
+				opt.center
+			),
 			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
 		this._setPos(pos);
 	},
 
-	_update: function() {
+	updateHandle: function() {
 		var center = this._handled.getCenter(),
 			rotation = this._handled.getRotation(),
 			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
-			latlng = this._map.layerPointToLatLng(new L.Point(
-				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			));
+			latlng = this._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
+		this.setRotation(rotation);
 		this.setLatLng(latlng);
-	},
-
-	_onHandleDrag: function(event) {
-		var handle = event.target,
-			latlng = handle.getLatLng();
-
-		switch (this._handleType) {
-		case 'rotate':
-			var center = this._handled.getCenter(),
-				point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
-				theta;
-
-			if (point.y > 0) {
-				theta = Math.PI - Math.atan(point.x / point.y);
-			} else {
-				theta = - Math.atan(point.x / point.y);
-			}
-			this._handled.setRotation(theta);
-			this._update();
-			break;
-
-		case 'resize':
-			console.log('hi');
-			break;
-
-		case 'move':
-			console.log('hi');
-			break;
-		}
 	},
 
 	_onHandleDragStart: function() {
@@ -431,7 +414,12 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_onHandleDragEnd: function() {
+		this._fireEdit();
+	},
 
+	_fireEdit: function() {
+		this._handled.edited = true;
+		this._handled.fire('edit');
 	},
 
 	_bindListeners: function() {
@@ -439,7 +427,118 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragstart', this._onHandleDragStart, this)
 			.on('drag', this._onHandleDrag, this)
 			.on('dragend', this._onHandleDragEnd, this);
-		this._handled._map.on('zoomend', this._update, this);
+
+		this._handled._map.on('zoomend', this.updateHandle, this);
+		this._handled.on('illustrate:handledrag', this.updateHandle, this);
+	},
+
+	_calculateOffset: function(centerPixelCoordinates) {
+		var rotation = this._handled.getRotation();
+		return centerPixelCoordinates.add(this._rotate(new L.Point(this._offsetX, this._offsetY), rotation)).round();
+	},
+
+	_rotate: function(point, theta) {
+		return new L.Point(
+			point.x*Math.cos(theta) + point.y*Math.sin(theta),
+			point.x*Math.sin(theta) - point.y*Math.cos(theta)
+		);
+	}
+});
+L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
+	options: {
+		TYPE: 'move'
+	},
+
+	_onHandleDrag: function() {
+
+	}
+});
+L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
+	options: {
+		TYPE: 'resize'
+	},
+
+	initialize: function(shape, options) {
+		L.Illustrate.EditHandle.prototype.initialize.call(this, shape, options);
+		this._corner = options.corner;
+		console.log(this._offsetX, this._offsetY);
+	},
+
+	_onHandleDrag: function(event) {
+		// perhaps need to 'un-rotate the coordinates first?'
+		// i.e. get the latLngPixelCoordinates, un-rotate, get offset.
+
+		var handle = event.target,
+			rotation = this._handled.getRotation(),
+			latLngPixelCoordinates = this._map.latLngToLayerPoint(handle.getLatLng()),
+			centerPixelCoordinates = this._map.latLngToLayerPoint(this._handled.getCenter()),
+			pixelCoordinates = latLngPixelCoordinates.subtract(centerPixelCoordinates),
+			offset = this._rotate(pixelCoordinates, -rotation).round();
+
+		this._offsetX = (Math.abs(offset.x) > 10) ? offset.x : 10;
+		this._offsetY = (Math.abs(offset.y) > 10) ? - offset.y : 10;
+
+		console.log(this._offsetX, this._offsetY);
+
+		// this._handled.setSize(new L.Point(2*Math.abs(this._offsetX), 2*Math.abs(this._offsetY)));
+
+		this._handled.fire('illustrate:handledrag');
+	},
+
+	updateHandle: function() {
+		var size = this._handled.getSize(),
+			height = Math.round(size.y/2),
+			width = Math.round(size.x/2);
+
+		switch (this._corner) {
+		case 'upper-left':
+			this._offsetX = - width;
+			this._offsetY = height;
+			break;
+		case 'upper-right':
+			this._offsetX = width;
+			this._offsetY = height;
+			break;
+		case 'lower-left':
+			this._offsetX = - width;
+			this._offsetY = - height;
+			break;
+		case 'lower-right':
+			this._offsetX = width;
+			this._offsetY = - height;
+			break;
+		}
+
+		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
+	}
+});
+L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
+	options: {
+		TYPE: 'rotate'
+	},
+
+	_onHandleDrag: function(event) {
+		var handle = event.target,
+			latlng = handle.getLatLng(),
+			center = this._handled.getCenter(),
+			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
+			theta;
+
+		if (point.y > 0) {
+			theta = Math.PI - Math.atan(point.x / point.y);
+		} else {
+			theta = - Math.atan(point.x / point.y);
+		}
+
+		// rotate the textbox
+		this._handled.setRotation(theta);
+
+		this._handled.fire('illustrate:handledrag');
+	},
+
+	updateHandle: function() {
+		this._offsetY = this._handled.getSize().y;
+		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
 	}
 });
 

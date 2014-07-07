@@ -11,19 +11,13 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	initialize: function(shape, options) {
-		this._offsetX = options.offsetX || 0;
-		this._offsetY = options.offsetY || 0;
-		this._handleType = options.type;
+		this._offsetX = options.offset.x || 0;
+		this._offsetY = options.offset.y || 0;
 		this._handled = shape;
-		this._zoom = this._handled._map.getZoom();
 
 		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
 			centerPixelCoordinates = this._handled._map.latLngToLayerPoint(center),
-			latlng = this._handled._map.layerPointToLatLng(new L.Point(
-				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			));
+			latlng = this._handled._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, {
 			draggable: true,
@@ -36,55 +30,24 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	_animateZoom: function(opt) {
 		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
 			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
-			handleLatLng = this._handled._map._newLayerPointToLatLng(new L.Point(
-				newCenterPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				newCenterPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			), opt.zoom, opt.center),
+			handleLatLng = this._handled._map._newLayerPointToLatLng(
+				this._calculateOffset(newCenterPixelCoordinates),
+				opt.zoom,
+				opt.center
+			),
 			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
 		this._setPos(pos);
 	},
 
-	_update: function() {
+	updateHandle: function() {
 		var center = this._handled.getCenter(),
 			rotation = this._handled.getRotation(),
 			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
-			latlng = this._map.layerPointToLatLng(new L.Point(
-				centerPixelCoordinates.x + this._offsetY*Math.sin(rotation),
-				centerPixelCoordinates.y - this._offsetY*Math.cos(rotation)
-			));
+			latlng = this._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
+		this.setRotation(rotation);
 		this.setLatLng(latlng);
-	},
-
-	_onHandleDrag: function(event) {
-		var handle = event.target,
-			latlng = handle.getLatLng();
-
-		switch (this._handleType) {
-		case 'rotate':
-			var center = this._handled.getCenter(),
-				point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
-				theta;
-
-			if (point.y > 0) {
-				theta = Math.PI - Math.atan(point.x / point.y);
-			} else {
-				theta = - Math.atan(point.x / point.y);
-			}
-			this._handled.setRotation(theta);
-			this._update();
-			break;
-
-		case 'resize':
-			console.log('hi');
-			break;
-
-		case 'move':
-			console.log('hi');
-			break;
-		}
 	},
 
 	_onHandleDragStart: function() {
@@ -92,7 +55,12 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_onHandleDragEnd: function() {
+		this._fireEdit();
+	},
 
+	_fireEdit: function() {
+		this._handled.edited = true;
+		this._handled.fire('edit');
 	},
 
 	_bindListeners: function() {
@@ -100,6 +68,20 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragstart', this._onHandleDragStart, this)
 			.on('drag', this._onHandleDrag, this)
 			.on('dragend', this._onHandleDragEnd, this);
-		this._handled._map.on('zoomend', this._update, this);
+
+		this._handled._map.on('zoomend', this.updateHandle, this);
+		this._handled.on('illustrate:handledrag', this.updateHandle, this);
+	},
+
+	_calculateOffset: function(centerPixelCoordinates) {
+		var rotation = this._handled.getRotation();
+		return centerPixelCoordinates.add(this._rotate(new L.Point(this._offsetX, this._offsetY), rotation)).round();
+	},
+
+	_rotate: function(point, theta) {
+		return new L.Point(
+			point.x*Math.cos(theta) + point.y*Math.sin(theta),
+			point.x*Math.sin(theta) - point.y*Math.cos(theta)
+		);
 	}
 });
