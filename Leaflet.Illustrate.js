@@ -461,7 +461,6 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 	initialize: function(shape, options) {
 		L.Illustrate.EditHandle.prototype.initialize.call(this, shape, options);
 		this._corner = options.corner;
-		console.log(this._offsetX, this._offsetY);
 	},
 
 	_onHandleDrag: function(event) {
@@ -478,9 +477,7 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 		this._offsetX = (Math.abs(offset.x) > 10) ? offset.x : 10;
 		this._offsetY = (Math.abs(offset.y) > 10) ? - offset.y : 10;
 
-		console.log(this._offsetX, this._offsetY);
-
-		// this._handled.setSize(new L.Point(2*Math.abs(this._offsetX), 2*Math.abs(this._offsetY)));
+		this._handled.setSize(new L.Point(2*Math.abs(this._offsetX), 2*Math.abs(this._offsetY)));
 
 		this._handled.fire('illustrate:handledrag');
 	},

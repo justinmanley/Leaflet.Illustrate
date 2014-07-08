@@ -111,6 +111,13 @@ module.exports = function(grunt) {
             }
         },
 
+        karma: {
+            unit: {
+                configFile: 'karma.conf.js',
+                background: true
+            }
+        },
+
         watch: {
             options : {
                 livereload: 7777
@@ -129,7 +136,7 @@ module.exports = function(grunt) {
                     'jshint',
                     'concat:dist',
                     'less',
-                    'mocha'
+                    'karma:unit:run'
                 ]
             }
         },
