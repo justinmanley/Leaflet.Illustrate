@@ -114,7 +114,8 @@ module.exports = function(grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
-                background: true
+                background: true,
+                logLevel: 'INFO'
             }
         },
 
@@ -169,7 +170,7 @@ module.exports = function(grunt) {
     grunt.registerTask('test', ['jshint:tests', 'mocha']);
 
     //defaults
-    grunt.registerTask('default', ['watch:source']);
+    grunt.registerTask('default', ['karma:unit:start', 'watch:source']);
 
     //development
     grunt.registerTask('dev', ['connect:devserver', 'open:devserver', 'watch:source']);

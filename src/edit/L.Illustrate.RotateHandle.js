@@ -23,7 +23,7 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	updateHandle: function() {
-		this._offsetY = this._handled.getSize().y;
+		this._handleOffset = new L.Point(0, this._handled.getSize().y);
 		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
 	}
 });

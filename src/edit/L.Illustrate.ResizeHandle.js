@@ -9,20 +9,10 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_onHandleDrag: function(event) {
-		// perhaps need to 'un-rotate the coordinates first?'
-		// i.e. get the latLngPixelCoordinates, un-rotate, get offset.
-
 		var handle = event.target,
-			rotation = this._handled.getRotation(),
-			latLngPixelCoordinates = this._map.latLngToLayerPoint(handle.getLatLng()),
-			centerPixelCoordinates = this._map.latLngToLayerPoint(this._handled.getCenter()),
-			pixelCoordinates = latLngPixelCoordinates.subtract(centerPixelCoordinates),
-			offset = this._rotate(pixelCoordinates, -rotation).round();
+			offset = this._calculateResizeOffset(handle.getLatLng(), new L.Point(10, 10));
 
-		this._offsetX = (Math.abs(offset.x) > 10) ? offset.x : 10;
-		this._offsetY = (Math.abs(offset.y) > 10) ? - offset.y : 10;
-
-		this._handled.setSize(new L.Point(2*Math.abs(this._offsetX), 2*Math.abs(this._offsetY)));
+		this._handled.setSize(offset.abs().multiplyBy(2));
 
 		this._handled.fire('illustrate:handledrag');
 	},
@@ -34,20 +24,16 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 		switch (this._corner) {
 		case 'upper-left':
-			this._offsetX = - width;
-			this._offsetY = height;
+			this._handleOffset = new L.Point(-width, height);
 			break;
 		case 'upper-right':
-			this._offsetX = width;
-			this._offsetY = height;
+			this._handleOffset = new L.Point(width, height);
 			break;
 		case 'lower-left':
-			this._offsetX = - width;
-			this._offsetY = - height;
+			this._handleOffset = new L.Point(-width, -height);
 			break;
 		case 'lower-right':
-			this._offsetX = width;
-			this._offsetY = - height;
+			this._handleOffset = new L.Point(width, -height);
 			break;
 		}
 

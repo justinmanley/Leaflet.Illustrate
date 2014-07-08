@@ -36,6 +36,16 @@ L.Map.include({
 		return this.unproject(point.add(topLeft), newZoom);
 	}
 });
+if (L.Point) {
+	L.Point.prototype._abs =  function() {
+		this.x = Math.abs(this.x);
+		this.y = Math.abs(this.y);
+		return this;
+	};
+	L.Point.prototype.abs = function() {
+		return this.clone()._abs();
+	};
+}
 L.RotatableMarker = L.Marker.extend({
 	initialize: function(latlng, options) {
 		L.Marker.prototype.initialize.call(this, latlng, options);
@@ -90,6 +100,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
 			.setSize(new L.Point(width, height));
+
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
@@ -370,13 +381,15 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	initialize: function(shape, options) {
-		this._offsetX = options.offset.x || 0;
-		this._offsetY = options.offset.y || 0;
+		this._handleOffset = new L.Point(options.offset.x || 0, options.offset.y || 0);
 		this._handled = shape;
 
-		var center = this._handled.getCenter(),
+		var rotation = this._handled.getRotation(),
+			center = this._handled.getCenter(),
 			centerPixelCoordinates = this._handled._map.latLngToLayerPoint(center),
-			latlng = this._handled._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
+			latlng = this._handled._map.layerPointToLatLng(
+				this._offsetToLayerPoint(centerPixelCoordinates, this._handleOffset, rotation)
+			);
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, {
 			draggable: true,
@@ -389,9 +402,10 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	_animateZoom: function(opt) {
 		var center = this._handled.getCenter(),
+			rotation = this._handled.getRotation(),
 			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
 			handleLatLng = this._handled._map._newLayerPointToLatLng(
-				this._calculateOffset(newCenterPixelCoordinates),
+				this._offsetToLayerPoint(newCenterPixelCoordinates, this._handleOffset, rotation),
 				opt.zoom,
 				opt.center
 			),
@@ -404,7 +418,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		var center = this._handled.getCenter(),
 			rotation = this._handled.getRotation(),
 			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
-			latlng = this._map.layerPointToLatLng(this._calculateOffset(centerPixelCoordinates));
+			latlng = this._map.layerPointToLatLng(this._offsetToLayerPoint(centerPixelCoordinates, this._handleOffset, rotation));
 		this.setRotation(rotation);
 		this.setLatLng(latlng);
 	},
@@ -432,16 +446,28 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		this._handled.on('illustrate:handledrag', this.updateHandle, this);
 	},
 
-	_calculateOffset: function(centerPixelCoordinates) {
-		var rotation = this._handled.getRotation();
-		return centerPixelCoordinates.add(this._rotate(new L.Point(this._offsetX, this._offsetY), rotation)).round();
+	_offsetToLayerPoint: function(centerPixelCoordinates, offset, rotation) {
+		return centerPixelCoordinates.add(this._calculateRotation(offset, rotation)).round();
 	},
 
-	_rotate: function(point, theta) {
+	_calculateRotation: function(point, theta) {
 		return new L.Point(
 			point.x*Math.cos(theta) + point.y*Math.sin(theta),
 			point.x*Math.sin(theta) - point.y*Math.cos(theta)
 		);
+	},
+
+	/* Should return the offset corresponding to the latlng. */
+	_calculateResizeOffset: function(latlng, min) {
+		var rotation = this._handled.getRotation(),
+			latLngPixelCoordinates = this._map.latLngToLayerPoint(latlng),
+			centerPixelCoordinates = this._map.latLngToLayerPoint(this._handled.getCenter()),
+			pixelCoordinates = latLngPixelCoordinates.subtract(centerPixelCoordinates),
+			offset = this._calculateRotation(pixelCoordinates, -rotation),
+			x = (Math.abs(offset.x) > min.x) ? offset.x : min.x,
+			y = (Math.abs(offset.y) > min.y) ? - offset.y : min.y;
+
+		return new L.Point(x, y).round();
 	}
 });
 L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
@@ -464,20 +490,10 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_onHandleDrag: function(event) {
-		// perhaps need to 'un-rotate the coordinates first?'
-		// i.e. get the latLngPixelCoordinates, un-rotate, get offset.
-
 		var handle = event.target,
-			rotation = this._handled.getRotation(),
-			latLngPixelCoordinates = this._map.latLngToLayerPoint(handle.getLatLng()),
-			centerPixelCoordinates = this._map.latLngToLayerPoint(this._handled.getCenter()),
-			pixelCoordinates = latLngPixelCoordinates.subtract(centerPixelCoordinates),
-			offset = this._rotate(pixelCoordinates, -rotation).round();
+			offset = this._calculateResizeOffset(handle.getLatLng(), new L.Point(10, 10));
 
-		this._offsetX = (Math.abs(offset.x) > 10) ? offset.x : 10;
-		this._offsetY = (Math.abs(offset.y) > 10) ? - offset.y : 10;
-
-		this._handled.setSize(new L.Point(2*Math.abs(this._offsetX), 2*Math.abs(this._offsetY)));
+		this._handled.setSize(offset.abs().multiplyBy(2));
 
 		this._handled.fire('illustrate:handledrag');
 	},
@@ -489,20 +505,16 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 		switch (this._corner) {
 		case 'upper-left':
-			this._offsetX = - width;
-			this._offsetY = height;
+			this._handleOffset = new L.Point(-width, height);
 			break;
 		case 'upper-right':
-			this._offsetX = width;
-			this._offsetY = height;
+			this._handleOffset = new L.Point(width, height);
 			break;
 		case 'lower-left':
-			this._offsetX = - width;
-			this._offsetY = - height;
+			this._handleOffset = new L.Point(-width, -height);
 			break;
 		case 'lower-right':
-			this._offsetX = width;
-			this._offsetY = - height;
+			this._handleOffset = new L.Point(width, -height);
 			break;
 		}
 
@@ -534,7 +546,7 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	updateHandle: function() {
-		this._offsetY = this._handled.getSize().y;
+		this._handleOffset = new L.Point(0, this._handled.getSize().y);
 		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
 	}
 });

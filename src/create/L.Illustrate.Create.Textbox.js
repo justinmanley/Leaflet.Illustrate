@@ -26,6 +26,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
 			.setSize(new L.Point(width, height));
+
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
 	}
 });
