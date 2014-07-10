@@ -56,7 +56,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	setCenter: function(latlng) {
 		this._latlng = latlng;
 
-		this._updateLatLng();
+		this._updateCenter();
 
 		return this;
 	},

@@ -164,7 +164,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	setCenter: function(latlng) {
 		this._latlng = latlng;
 
-		this._updateLatLng();
+		this._updateCenter();
 
 		return this;
 	},
@@ -318,22 +318,30 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
 		L.Edit.SimpleShape.prototype.addHooks.call(this);
 
-		this._bindRotateHandle();
-		this._bindResizeHandles();
+		this._addRotateHandle();
+		this._addResizeHandles();
+		this._addMoveHandle();
 	},
 
-	_bindRotateHandle: function() {
+	removeHooks: function() {
+		L.Edit.SimpleShape.prototype.removeHooks.call(this);
+	},
+
+	_addRotateHandle: function() {
 		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
 			offset: new L.Point(0, -this._shape.getSize().y)
 		});
 		this._markerGroup.addLayer(this._rotateHandle);
 	},
 
-	_bindMoveHandle: function() {
-
+	_addMoveHandle: function() {
+		this._moveHandle = new L.Illustrate.MoveHandle(this._shape, {
+			offset: new L.Point(0,0)
+		});
+		this._markerGroup.addLayer(this._moveHandle);
 	},
 
-	_bindResizeHandles: function() {
+	_addResizeHandles: function() {
 		var size = this._shape.getSize(),
 			height = Math.round(size.y/2),
 			width = Math.round(size.x/2),
@@ -499,8 +507,12 @@ L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 		TYPE: 'move'
 	},
 
-	_onHandleDrag: function() {
+	_onHandleDrag: function(event) {
+		var handle = event.target;
 
+		this._handled.setCenter(handle.getLatLng());
+
+		this._handled.fire('illustrate:handledrag');
 	}
 });
 L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
