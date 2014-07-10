@@ -395,9 +395,8 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		this._handleOffset = new L.Point(options.offset.x || 0, options.offset.y || 0);
 		this._handled = shape;
 
-		var rotation = this._handled.getRotation(),
-			latlng = this._handled._map.layerPointToLatLng(this._offsetToLayerPoint(
-				this._handleOffset, rotation
+		var latlng = this._handled._map.layerPointToLatLng(this._textboxCoordsToLayerPoint(
+				this._handleOffset
 			));
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, {
@@ -410,14 +409,8 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_animateZoom: function(opt) {
-		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
-			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
-			rotated = this._calculateRotation(this._handleOffset, rotation),
-			handleLatLng = this._handled._map._newLayerPointToLatLng(
-				this._textboxCoordsToLayerPoint(rotated, newCenterPixelCoordinates),
-				opt.zoom,
-				opt.center
+		var handleLatLng = this._handled._map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
 			),
 			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
@@ -426,7 +419,9 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	updateHandle: function() {
 		var rotation = this._handled.getRotation(),
-			latlng = this._map.layerPointToLatLng(this._offsetToLayerPoint(this._handleOffset, rotation));
+			latlng = this._handled._map.layerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset)
+			);
 
 		this.setRotation(rotation);
 		this.setLatLng(latlng);
@@ -462,39 +457,58 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		).round();
 	},
 
-	_offsetToLayerPoint: function(offset, rotation) {
-		var	rotated = this._calculateRotation(offset, rotation);
+	_layerPointToTextboxCoords: function(point, opt) {
+		var map = this._handled._map,
+			rotation = this._handled.getRotation(),
+			center = this._handled.getCenter(),
+			origin, textboxCoords;
 
-		return this._textboxCoordsToLayerPoint(rotated);
+		if (opt && opt.zoom && opt.center) {
+			origin = map._latLngToNewLayerPoint(center, opt.zoom, opt.center);
+		} else {
+			origin = map.latLngToLayerPoint(center);
+		}
+
+		/* First need to translate to the textbox coordinates. */
+		textboxCoords = point.subtract(origin);
+
+		/* Then unrotate. */
+		return this._calculateRotation(textboxCoords, - rotation);
 	},
 
-	_layerPointToTextboxCoords: function(point, center) {
+	_textboxCoordsToLayerPoint: function(coord, opt) {
 		var map = this._handled._map,
-			centerPixelCoordinates = map.latLngToLayerPoint(this._handled.getCenter()),
-			origin = center ? center : centerPixelCoordinates;
+			rotation = this._handled.getRotation(),
+			center = this._handled.getCenter(),
+			origin, rotated;
 
-		return point.subtract(origin);
+		if (opt && opt.zoom && opt.center) {
+			origin = map._latLngToNewLayerPoint(center, opt.zoom, opt.center);
+		} else {
+			origin = map.latLngToLayerPoint(center);
+		}
+
+		/* First need to rotate the offset to obtain the layer point. */
+		rotated = this._calculateRotation(coord, rotation);
+
+		/* Then translate to layer coordinates. */
+		return rotated.add(origin);
 	},
 
-	_textboxCoordsToLayerPoint: function(coord, center) {
-		var map = this._handled._map,
-			centerPixelCoordinates = map.latLngToLayerPoint(this._handled.getCenter()),
-			origin = center ? center : centerPixelCoordinates;
+	_latLngToTextboxCoords: function(latlng, opt) {
+		var map = this._handled._map;
 
-		return coord.add(origin);
+		return this._layerPointToTextboxCoords(map.latLngToLayerPoint(latlng), opt);
+	},
+
+	_textboxCoordsToLatLng: function(coord, opt) {
+		var map = this._handled._map;
+
+		return map.layerPointToLatLng(this._textboxCoordsToLayerPoint(coord, opt));
 	},
 
 	_latLngToOffset: function(latlng) {
-		var theta = this._handled.getRotation(),
-
-			/* Get the layer point from the latlng. */
-			layerPoint = this._map.latLngToLayerPoint(latlng),
-
-			/* Translate the layer point into coordinates with the origin at the center of the textbox. */
-			textboxCoord = this._layerPointToTextboxCoords(layerPoint),
-
-			/* Unrotate the point. */
-			offset = this._calculateRotation(textboxCoord, -theta),
+		var offset = this._latLngToTextboxCoords(latlng),
 			minSize = this._handled._minSize,
 			x = (Math.abs(offset.x) > minSize.x) ? offset.x : minSize.x,
 			y = (Math.abs(offset.y) > minSize.y) ? -offset.y : minSize.y;
@@ -562,6 +576,20 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 		TYPE: 'rotate'
 	},
 
+	onAdd: function(map) {
+		L.Illustrate.EditHandle.prototype.onAdd.call(this, map);
+
+		this._createPointer();
+
+		this._map.addLayer(this._pointer);
+	},
+
+	onRemove: function(map) {
+		this._map.removeLayer(this._pointer);
+
+		L.Illustrate.EditHandle.prototype.onRemove.call(this, map);
+	},
+
 	_onHandleDrag: function(event) {
 		var handle = event.target,
 			latlng = handle.getLatLng(),
@@ -575,7 +603,7 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 			theta = - Math.atan(point.x / point.y);
 		}
 
-		// rotate the textbox
+		/* rotate the textbox */
 		this._handled.setRotation(theta);
 
 		this._handled.fire('illustrate:handledrag');
@@ -583,7 +611,35 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 
 	updateHandle: function() {
 		this._handleOffset = new L.Point(0, -this._handled.getSize().y);
+
+		this._updatePointer();
+
 		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
+	},
+
+	_createPointer: function() {
+		var handleLatLng = this._map.layerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset)
+			),
+			topMiddleLatLng = this._map.layerPointToLatLng(
+				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
+			),
+			handleLineOptions = L.extend(this._handled.options, {
+				weight: Math.round(this._handled.options.weight/2)
+			});
+
+		this._pointer = new L.Polyline([handleLatLng, topMiddleLatLng], handleLineOptions);
+	},
+
+	_updatePointer: function() {
+		var topMiddleLatLng = this._map.layerPointToLatLng(
+				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
+			);
+
+		this._pointer.setLatLngs([
+			this._textboxCoordsToLatLng(this._handleOffset),
+			topMiddleLatLng
+		]);
 	}
 });
 

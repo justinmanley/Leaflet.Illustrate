@@ -51,6 +51,13 @@ describe("L.Illustrate.EditHandle", function() {
 		);
 	});
 
+	it("_latLngToTextboxCoords and _textboxCoordsToLatLng are inverses.", function() {
+		var offset = upperLeft._handleOffset;
+		expect(offset).to.deep.equal(
+			upperLeft._latLngToTextboxCoords(upperLeft._textboxCoordsToLatLng(offset))
+		);
+	});
+
 	it("_latLngToOffset of the current latlng should act as the identity with rotation = 0.", function() {
 		textbox.setRotation(0);
 
@@ -77,6 +84,34 @@ describe("L.Illustrate.EditHandle", function() {
 		// expect(newSize).to.be.an.instanceOf(L.Point);
 
 		// expect(delta).to.be.below(5);
+	});
+
+	it("Rotate handle pointer has correct endpoints for rotation = 0.", function() {
+		var rotateHandle = textbox.editing._rotateHandle,
+			midpoint = rotateHandle._textboxCoordsToLatLng(new L.Point(0, -Math.round(textbox.getSize().y/2))),
+			pointerLatLngs = rotateHandle._pointer.getLatLngs();
+
+		expect(pointerLatLngs[0]).to.deep.equal(rotateHandle.getLatLng(), "rotate handle position");
+		expect(pointerLatLngs[1]).to.deep.equal(midpoint, "midpoint");
+	});
+
+	it("Rotate handle pointer has correct endpoints for rotation != 0.", function() {
+		/* 
+		 * These tests may be failing because calling setRotation on the textbox doesn't update the edit handles. 
+		 * Instead of firing an illustrate:handledrag event, I should call textbox.setXXX(), as I have
+		 * been doing, and then from the setter, I should fire a change event.  The edit handles should
+		 * all listen for the change event.
+		 */
+
+		// textbox.setRotation(Math.PI/4);
+
+		// var rotateHandle = textbox.editing._rotateHandle,
+		// 	handlePosition = rotateHandle._textboxCoordsToLatLng(rotateHandle._handleOffset),
+		// 	midpoint = rotateHandle._textboxCoordsToLatLng(new L.Point(0, -Math.round(textbox.getSize().y/2))),
+		// 	pointerLatLngs = rotateHandle._pointer.getLatLngs();
+
+		// expect(pointerLatLngs[0]).to.deep.equal(rotateHandle.getLatLng(), "rotate handle position");
+		// expect(pointerLatLngs[1]).to.deep.equal(midpoint, "midpoint");
 	});
 
 	beforeEach(function() {
