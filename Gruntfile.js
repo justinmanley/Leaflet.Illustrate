@@ -88,8 +88,8 @@ module.exports = function(grunt) {
             source: {
                 src: [ 'src/*.js', 'src/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
-            tests: {
-                src: [ 'test/*.js' ],
+            test: {
+                src: [ 'test/*Spec.js' ],
             },
             grunt: {
                 src: ['Gruntfile.js']
@@ -130,14 +130,14 @@ module.exports = function(grunt) {
                     'src/create/*.js',
                     'src/edit/*.js',
                     'src/Leaflet.Illustrate.less',
-                    'test/*',
+                    'test/*Spec.js',
                     'Gruntfile.js'
                 ],
                 tasks: [
                     'jshint',
+                    'karma:unit:run',
                     'concat:dist',
-                    'less',
-                    'karma:unit:run'
+                    'less'
                 ]
             }
         },

@@ -15,11 +15,9 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		this._handled = shape;
 
 		var rotation = this._handled.getRotation(),
-			center = this._handled.getCenter(),
-			centerPixelCoordinates = this._handled._map.latLngToLayerPoint(center),
-			latlng = this._handled._map.layerPointToLatLng(
-				this._offsetToLayerPoint(centerPixelCoordinates, this._handleOffset, rotation)
-			);
+			latlng = this._handled._map.layerPointToLatLng(this._offsetToLayerPoint(
+				this._handleOffset, rotation
+			));
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, {
 			draggable: true,
@@ -34,8 +32,9 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		var center = this._handled.getCenter(),
 			rotation = this._handled.getRotation(),
 			newCenterPixelCoordinates = this._handled._map._latLngToNewLayerPoint(center, opt.zoom, opt.center),
+			rotated = this._calculateRotation(this._handleOffset, rotation),
 			handleLatLng = this._handled._map._newLayerPointToLatLng(
-				this._offsetToLayerPoint(newCenterPixelCoordinates, this._handleOffset, rotation),
+				this._textboxCoordsToLayerPoint(rotated, newCenterPixelCoordinates),
 				opt.zoom,
 				opt.center
 			),
@@ -45,10 +44,9 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	updateHandle: function() {
-		var center = this._handled.getCenter(),
-			rotation = this._handled.getRotation(),
-			centerPixelCoordinates = this._map.latLngToLayerPoint(center),
-			latlng = this._map.layerPointToLatLng(this._offsetToLayerPoint(centerPixelCoordinates, this._handleOffset, rotation));
+		var rotation = this._handled.getRotation(),
+			latlng = this._map.layerPointToLatLng(this._offsetToLayerPoint(this._handleOffset, rotation));
+
 		this.setRotation(rotation);
 		this.setLatLng(latlng);
 	},
@@ -76,26 +74,49 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		this._handled.on('illustrate:handledrag', this.updateHandle, this);
 	},
 
-	_offsetToLayerPoint: function(centerPixelCoordinates, offset, rotation) {
-		return centerPixelCoordinates.add(this._calculateRotation(offset, rotation)).round();
-	},
-
 	_calculateRotation: function(point, theta) {
 		return new L.Point(
-			point.x*Math.cos(theta) + point.y*Math.sin(theta),
-			point.x*Math.sin(theta) - point.y*Math.cos(theta)
-		);
+			point.x*Math.cos(theta) - point.y*Math.sin(theta),
+			point.y*Math.cos(theta) + point.x*Math.sin(theta)
+		).round();
 	},
 
-	/* Should return the offset corresponding to the latlng. */
-	_calculateResizeOffset: function(latlng, min) {
-		var rotation = this._handled.getRotation(),
-			latLngPixelCoordinates = this._map.latLngToLayerPoint(latlng),
-			centerPixelCoordinates = this._map.latLngToLayerPoint(this._handled.getCenter()),
-			pixelCoordinates = latLngPixelCoordinates.subtract(centerPixelCoordinates),
-			offset = this._calculateRotation(pixelCoordinates, -rotation),
-			x = (Math.abs(offset.x) > min.x) ? offset.x : min.x,
-			y = (Math.abs(offset.y) > min.y) ? - offset.y : min.y;
+	_offsetToLayerPoint: function(offset, rotation) {
+		var	rotated = this._calculateRotation(offset, rotation);
+
+		return this._textboxCoordsToLayerPoint(rotated);
+	},
+
+	_layerPointToTextboxCoords: function(point, center) {
+		var map = this._handled._map,
+			centerPixelCoordinates = map.latLngToLayerPoint(this._handled.getCenter()),
+			origin = center ? center : centerPixelCoordinates;
+
+		return point.subtract(origin);
+	},
+
+	_textboxCoordsToLayerPoint: function(coord, center) {
+		var map = this._handled._map,
+			centerPixelCoordinates = map.latLngToLayerPoint(this._handled.getCenter()),
+			origin = center ? center : centerPixelCoordinates;
+
+		return coord.add(origin);
+	},
+
+	_latLngToOffset: function(latlng) {
+		var theta = this._handled.getRotation(),
+
+			/* Get the layer point from the latlng. */
+			layerPoint = this._map.latLngToLayerPoint(latlng),
+
+			/* Translate the layer point into coordinates with the origin at the center of the textbox. */
+			textboxCoord = this._layerPointToTextboxCoords(layerPoint),
+
+			/* Unrotate the point. */
+			offset = this._calculateRotation(textboxCoord, -theta),
+			minSize = this._handled._minSize,
+			x = (Math.abs(offset.x) > minSize.x) ? offset.x : minSize.x,
+			y = (Math.abs(offset.y) > minSize.y) ? -offset.y : minSize.y;
 
 		return new L.Point(x, y).round();
 	}

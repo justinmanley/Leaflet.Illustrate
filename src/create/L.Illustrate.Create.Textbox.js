@@ -10,7 +10,9 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			color: '#4387fd',
 			weight: 2,
 			fill: false,
-			opacity: 1
+			opacity: 1,
+			minWidth: 10,
+			minHeight: 10
 		}
 	},
 

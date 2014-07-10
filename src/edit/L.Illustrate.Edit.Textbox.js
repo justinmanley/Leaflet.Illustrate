@@ -10,7 +10,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 
 	_bindRotateHandle: function() {
 		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
-			offset: new L.Point(0, this._shape.getSize().y)
+			offset: new L.Point(0, -this._shape.getSize().y)
 		});
 		this._markerGroup.addLayer(this._rotateHandle);
 	},
@@ -24,19 +24,19 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			height = Math.round(size.y/2),
 			width = Math.round(size.x/2),
 			upperLeft = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(-width, height),
+				offset: new L.Point(-width, -height),
 				corner: 'upper-left'
 			}),
 			upperRight = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(width, height),
+				offset: new L.Point(width, -height),
 				corner: 'upper-right'
 			}),
 			lowerLeft = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(-width, -height),
+				offset: new L.Point(-width, height),
 				corner: 'lower-left'
 			}),
 			lowerRight = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(width, -height),
+				offset: new L.Point(width, height),
 				corner: 'lower-right'
 			});
 

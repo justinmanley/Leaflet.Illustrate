@@ -10,7 +10,7 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 	_onHandleDrag: function(event) {
 		var handle = event.target,
-			offset = this._calculateResizeOffset(handle.getLatLng(), new L.Point(10, 10));
+			offset = this._latLngToOffset(handle.getLatLng());
 
 		this._handled.setSize(offset.abs().multiplyBy(2));
 

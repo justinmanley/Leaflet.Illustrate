@@ -22,6 +22,7 @@ L.Illustrate.Textbox = L.Class.extend({
 			iconAnchor: new L.Point(0, 0)
 		});
 		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
+		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
 	},
 
 	onAdd: function(map) {
