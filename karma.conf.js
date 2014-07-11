@@ -24,7 +24,8 @@ module.exports = function(config) {
       'src/extends-core/*.js',
       'src/create/*.js',
       'src/L.Illustrate.*.js',
-      'src/edit/*.js'
+      'src/edit/*.js',
+      'test/*.js'
     ],
 
 

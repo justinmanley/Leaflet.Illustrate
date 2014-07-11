@@ -114,7 +114,8 @@ module.exports = function(grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
-                background: true
+                background: true,
+                logLevel: 'DEBUG'
             }
         },
 
@@ -166,7 +167,7 @@ module.exports = function(grunt) {
     });
 
     //single run tests
-    grunt.registerTask('test', ['jshint:tests', 'mocha']);
+    grunt.registerTask('test', ['jshint:test', 'karma:unit:start', 'karma:unit:run']);
 
     //defaults
     grunt.registerTask('default', ['karma:unit:start', 'watch:source']);
