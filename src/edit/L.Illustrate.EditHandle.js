@@ -23,6 +23,10 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
+	},
+
+	onAdd: function(map) {
+		L.RotatableMarker.prototype.onAdd.call(this, map);
 
 		this._bindListeners();
 	},
