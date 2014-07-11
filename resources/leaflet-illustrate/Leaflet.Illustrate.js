@@ -90,6 +90,12 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		}
 	},
 
+	initialize: function(map, options) {
+		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
+
+		this.type = L.Illustrate.Create.Textbox.TYPE;
+	},
+
 	_fireCreatedEvent: function() {
 		var latlngs = this._shape.getLatLngs(),
 			center = new L.LatLngBounds(latlngs).getCenter(),
@@ -254,22 +260,49 @@ L.Illustrate.Textbox = L.Class.extend({
 	}
 });
 
-L.Illustrate.Toolbar = L.DrawToolbar.extend({
+L.Illustrate.Toolbar = L.Toolbar.extend({
 	statics: {
 		TYPE: 'illustrate'
 	},
 
 	options: {
-		text: {}
+		textbox: {}
+	},
+
+	initialize: function(options) {
+		// Ensure that the options are merged correctly since L.extend is only shallow
+		for (var type in this.options) {
+			if (this.options.hasOwnProperty(type)) {
+				if (options[type]) {
+					options[type] = L.extend({}, this.options[type], options[type]);
+				}
+			}
+		}
+
+		this._toolbarClass = 'leaflet-illustrate-create';
+		L.Toolbar.prototype.initialize.call(this, options);
 	},
 
 	getModeHandlers: function(map) {
-		var illustrateModes = [{
-			enabled: this.options.text,
-			handler: new L.Illustrate.Create.Textbox(map, this.options.text),
+		return [{
+			enabled: this.options.textbox,
+			handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
 			title: 'Add a textbox'
 		}];
-		return L.DrawToolbar.prototype.getModeHandlers(map).concat(illustrateModes);
+	},
+
+	getActions: function() {
+		return [];
+	},
+
+	setOptions: function (options) {
+		L.setOptions(this, options);
+
+		for (var type in this._modes) {
+			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type)) {
+				this._modes[type].handler.setOptions(options[type]);
+			}
+		}
 	}
 });
 
@@ -312,6 +345,45 @@ L.Map.addInitHook(function() {
 		this.addControl(this.illustrateControl);
 	}
 });
+L.Illustrate.tooltipText = {
+	create: {
+		toolbar: {
+			actions: {
+
+			},
+			undo: {
+
+			},
+			buttons: {
+
+			}
+		},
+		handlers: {
+
+		}
+	},
+
+	edit: {
+		toolbar: {
+			actions: {
+
+			},
+			undo: {
+
+			},
+			buttons: {
+
+			}
+		},
+		handlers: {
+			textbox: {
+				tooltip: {
+					start: ''
+				}
+			}
+		}
+	}
+};
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
@@ -404,15 +476,20 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
+	},
+
+	onAdd: function(map) {
+		L.RotatableMarker.prototype.onAdd.call(this, map);
 
 		this._bindListeners();
 	},
 
 	_animateZoom: function(opt) {
-		var handleLatLng = this._handled._map._newLayerPointToLatLng(
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
 				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
 			),
-			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
+			pos = map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
 		this._setPos(pos);
 	},
@@ -576,11 +653,13 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 		TYPE: 'rotate'
 	},
 
+	initialize: function(shape, options) {
+		L.Illustrate.EditHandle.prototype.initialize.call(this, shape, options);
+		this._createPointer();
+	},
+
 	onAdd: function(map) {
 		L.Illustrate.EditHandle.prototype.onAdd.call(this, map);
-
-		this._createPointer();
-
 		this._map.addLayer(this._pointer);
 	},
 
@@ -618,10 +697,11 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_createPointer: function() {
-		var handleLatLng = this._map.layerPointToLatLng(
+		var map = this._handled._map,
+			handleLatLng = map.layerPointToLatLng(
 				this._textboxCoordsToLayerPoint(this._handleOffset)
 			),
-			topMiddleLatLng = this._map.layerPointToLatLng(
+			topMiddleLatLng = map.layerPointToLatLng(
 				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
 			),
 			handleLineOptions = L.extend(this._handled.options, {
@@ -640,6 +720,26 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 			this._textboxCoordsToLatLng(this._handleOffset),
 			topMiddleLatLng
 		]);
+	},
+
+	/* Stops the pointer from jumping up/down on zoom in/out. */
+	_animatePointerOnZoom: function(opt) {
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			),
+			midpoint = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			);
+		this._pointer.setLatLngs([handleLatLng, midpoint]);
+	},
+
+	_bindListeners: function() {
+		L.Illustrate.EditHandle.prototype._bindListeners.call(this);
+		this._handled._map
+			.on('zoomend', this._updatePointer, this)
+			// .on('zoomstart', this._animatePointerOnZoom, this)
+			.on('zoomanim', this._animatePointerOnZoom, this);
 	}
 });
 
