@@ -28,10 +28,11 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_animateZoom: function(opt) {
-		var handleLatLng = this._handled._map._newLayerPointToLatLng(
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
 				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
 			),
-			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
+			pos = map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
 		this._setPos(pos);
 	},

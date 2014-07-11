@@ -481,10 +481,11 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_animateZoom: function(opt) {
-		var handleLatLng = this._handled._map._newLayerPointToLatLng(
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
 				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
 			),
-			pos = this._map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
+			pos = map._latLngToNewLayerPoint(handleLatLng, opt.zoom, opt.center).round();
 
 		this._setPos(pos);
 	},
@@ -687,6 +688,20 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 		this._updatePointer();
 
 		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
+	},
+
+	_animateZoom: function(opt) {
+		L.Illustrate.EditHandle.prototype._animateZoom.call(this, opt);
+
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			),
+			midpoint = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			);
+		this._pointer.setLatLngs([handleLatLng, midpoint]);
+
 	},
 
 	_createPointer: function() {

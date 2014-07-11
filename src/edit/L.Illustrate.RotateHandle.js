@@ -44,6 +44,20 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 		L.Illustrate.EditHandle.prototype.updateHandle.call(this);
 	},
 
+	_animateZoom: function(opt) {
+		L.Illustrate.EditHandle.prototype._animateZoom.call(this, opt);
+
+		var map = this._handled._map,
+			handleLatLng = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			),
+			midpoint = map._newLayerPointToLatLng(
+				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
+			);
+		this._pointer.setLatLngs([handleLatLng, midpoint]);
+
+	},
+
 	_createPointer: function() {
 		var handleLatLng = this._map.layerPointToLatLng(
 				this._textboxCoordsToLayerPoint(this._handleOffset)
