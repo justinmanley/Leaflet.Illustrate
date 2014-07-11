@@ -99,7 +99,7 @@ module.exports = function(grunt) {
         less: {
             source: {
                 files: {
-                    'Leaflet.Illustrate.css': 'src/Leaflet.Illustrate.less'
+                    'dist/Leaflet.Illustrate.css': 'src/Leaflet.Illustrate.less'
                 }
             }
         },
@@ -161,7 +161,7 @@ module.exports = function(grunt) {
                     'src/L.Illustrate.*.js',
                     'src/edit/*.js'
                 ],
-                dest: 'Leaflet.Illustrate.js',
+                dest: 'dist/Leaflet.Illustrate.js',
             }
         }
     });
