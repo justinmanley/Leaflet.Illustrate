@@ -16,6 +16,12 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		}
 	},
 
+	initialize: function(map, options) {
+		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
+
+		this.type = L.Illustrate.Create.Textbox.TYPE;
+	},
+
 	_fireCreatedEvent: function() {
 		var latlngs = this._shape.getLatLngs(),
 			center = new L.LatLngBounds(latlngs).getCenter(),

@@ -1,19 +1,46 @@
-L.Illustrate.Toolbar = L.DrawToolbar.extend({
+L.Illustrate.Toolbar = L.Toolbar.extend({
 	statics: {
 		TYPE: 'illustrate'
 	},
 
 	options: {
-		text: {}
+		textbox: {}
+	},
+
+	initialize: function(options) {
+		// Ensure that the options are merged correctly since L.extend is only shallow
+		for (var type in this.options) {
+			if (this.options.hasOwnProperty(type)) {
+				if (options[type]) {
+					options[type] = L.extend({}, this.options[type], options[type]);
+				}
+			}
+		}
+
+		this._toolbarClass = 'leaflet-illustrate-create';
+		L.Toolbar.prototype.initialize.call(this, options);
 	},
 
 	getModeHandlers: function(map) {
-		var illustrateModes = [{
-			enabled: this.options.text,
-			handler: new L.Illustrate.Create.Textbox(map, this.options.text),
+		return [{
+			enabled: this.options.textbox,
+			handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
 			title: 'Add a textbox'
 		}];
-		return L.DrawToolbar.prototype.getModeHandlers(map).concat(illustrateModes);
+	},
+
+	getActions: function() {
+		return [];
+	},
+
+	setOptions: function (options) {
+		L.setOptions(this, options);
+
+		for (var type in this._modes) {
+			if (this._modes.hasOwnProperty(type) && options.hasOwnProperty(type)) {
+				this._modes[type].handler.setOptions(options[type]);
+			}
+		}
 	}
 });
 
