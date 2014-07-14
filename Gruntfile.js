@@ -135,6 +135,7 @@ module.exports = function(grunt) {
                 tasks: [
                     'jshint',
                     'karma:unit:run',
+                    'coverage',
                     'concat:dist',
                     'less'
                 ]
@@ -176,4 +177,28 @@ module.exports = function(grunt) {
 
     //server daemon
     grunt.registerTask('serve', ['connect:webserver']);
+
+    grunt.registerTask('coverage', "Custom commmand-line reporter for karma-coverage", function() {
+        var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),
+            reports = {},
+            report, i, len;
+
+        for (i = 0, len = coverageReports.length; i < len; i++) {
+            report = grunt.file.read(coverageReports[i]);
+            if (!reports[report]) {
+                reports[report] = [coverageReports[i]];
+            } else {
+                reports[report].push(coverageReports[i]);
+            }
+        }
+
+        for (report in reports) {
+            if (reports.hasOwnProperty(report)) {
+                for (i = 0, len = reports[report].length; i < len; i++) {
+                    grunt.log.writeln(reports[report][i]);
+                }
+                grunt.log.writeln(report);
+            }
+        }
+    });
 };
