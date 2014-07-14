@@ -1,6 +1,6 @@
 {
   "name": "leaflet-illustrate",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Rich annotation plugin for Leaflet.",
   "devDependencies": {
     "chai": "1.9.1",
@@ -30,6 +30,12 @@
   },
   "peerDependencies": {
     "grunt-cli": "0.1.13"
+  },
+  "directories": {
+    "examples": "./examples",
+    "distribution": "./dist",
+    "source": "./src",
+    "tests": "./test"
   },
   "repository": {
     "type": "git",
