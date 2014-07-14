@@ -4,6 +4,7 @@
 
 L.Illustrate = {};
 
+L.Illustrate.version = "0.0.1";
 if (L.DomUtil) {
 	L.DomUtil.getRotateString = function(angle, units) {
 		var is3d = L.Browser.webkit3d,
