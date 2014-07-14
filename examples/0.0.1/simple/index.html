@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type="text/css" href="../../../resources/leaflet/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="../../../resources/leaflet-draw/leaflet.draw.css" />
+	<link rel="stylesheet" type="text/css" href="../leaflet-illustrate/Leaflet.Illustrate.css" />
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="../../../resources/leaflet/leaflet.js"></script>
+	<script src="../../../resources/leaflet-draw/leaflet.draw.js"></script>
+	<script src="../leaflet-illustrate/Leaflet.Illustrate.js"></script>
+	<style>
+		html, body, #map { margin: 0; height: 100%; width: 100%; }
+	</style>
+</head>
+<body>
+	<div id="map"></div>
+	<script>
+		var map = L.map('map').setView([41.7896,-87.5996], 15);
+		L.tileLayer("http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
+		}).addTo(map);
+
+		var drawnItems = new L.FeatureGroup();
+		map.addLayer(drawnItems);
+
+		var illustrateControl = new L.Illustrate.Control({
+			edit: {
+				featureGroup: drawnItems
+			}
+		});
+		map.addControl(illustrateControl);
+
+		map.on('draw:created', function(evt) {
+			var type = evt.layerType,
+				layer = evt.layer;
+
+			drawnItems.addLayer(layer);
+		});
+	</script>
+</body>
+</html>
