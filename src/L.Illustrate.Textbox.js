@@ -61,7 +61,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	getCenter: function() {
+	getLatLng: function() {
 		return this._latlng;
 	},
 

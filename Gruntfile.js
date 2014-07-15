@@ -157,7 +157,8 @@ module.exports = function(grunt) {
                 src: [
                     'src/L.Illustrate.js',
                     'src/extends-core/*.js',
-                    'src/create/*.js',
+                    'src/create/L.Illustrate.Create.js',
+                    'src/create/L.Illustrate.Create.*.js',
                     'src/L.Illustrate.*.js',
                     'src/edit/*.js'
                 ],

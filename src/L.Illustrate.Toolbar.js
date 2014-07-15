@@ -4,7 +4,8 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 	},
 
 	options: {
-		textbox: {}
+		textbox: {},
+		pointer: {}
 	},
 
 	initialize: function(options) {
@@ -22,11 +23,18 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 	},
 
 	getModeHandlers: function(map) {
-		return [{
-			enabled: this.options.textbox,
-			handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
-			title: 'Add a textbox'
-		}];
+		return [
+			{
+				enabled: this.options.textbox,
+				handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
+				title: 'Add a textbox'
+			},
+			{
+				enabled: this.options.pointer,
+				handler: new L.Illustrate.Create.Pointer(map, this.options.pointer),
+				title: 'Add a pointer'
+			}
+		];
 	},
 
 	getActions: function() {

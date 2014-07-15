@@ -1,5 +1,3 @@
-L.Illustrate.Create = L.Illustrate.Create || {};
-
 L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	statics: {
 		TYPE: 'textbox'

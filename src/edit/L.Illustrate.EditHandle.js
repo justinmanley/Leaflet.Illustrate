@@ -84,7 +84,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	_layerPointToTextboxCoords: function(point, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			origin, textboxCoords;
 
 		if (opt && opt.zoom && opt.center) {
@@ -103,7 +103,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	_textboxCoordsToLayerPoint: function(coord, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			origin, rotated;
 
 		if (opt && opt.zoom && opt.center) {

@@ -74,7 +74,25 @@ L.RotatableMarker = L.Marker.extend({
 	}
 });
 L.Illustrate.Create = L.Illustrate.Create || {};
+L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
+	// Have *GOT* to refactor this.
+	// Really, I should get the layer point position on click, not the latlng.  There's no need to be endlessly
+	// translating between latlng and layerpoint.
 
+	_fireCreatedEvent: function() {
+		var latlngs = this._poly.getLatLngs(),
+			coordinates = [],
+			origin = this._map.latLngToLayerPoint(latlngs[0]),
+			pointer;
+
+		for (var i = 0, length = latlngs.length; i < length; i++) {
+			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
+		}
+
+		pointer = new L.Illustrate.Pointer(coordinates, latlngs[0], this.options.shapeOptions);
+		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
+	}
+});
 L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	statics: {
 		TYPE: 'textbox'
@@ -111,6 +129,116 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			.setSize(new L.Point(width, height));
 
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+	}
+});
+L.Illustrate.Pointer = L.Polyline.extend({
+	initialize: function(coordinates, anchor, options) {
+		L.Path.prototype.initialize.call(options);
+
+		this._coordinates = coordinates;
+		this._latlng = anchor;
+	},
+
+	onAdd: function(map) {
+		this._map = map;
+
+		if(!this._container) {
+			this._initElements();
+			this._initEvents();
+		}
+		this._bindListeners();
+
+		this._projectCoordinatesToLatLngs();
+		this.projectLatlngs();
+		this._updatePath();
+
+		if (this._container) {
+			this._pathRoot.appendChild(this._container);
+		}
+
+		this.fire('add');
+
+		map.on({
+			'moveend': this._updatePath
+		}, this);
+	},
+
+
+	getLatLng: function() {
+		return this._latlng;
+	},
+
+	_initElements: function() {
+		this._initPathRoot();
+		this._initPath();
+		this._initStyle();
+	},
+
+	// rewrite all
+	_animateZoom: function(opt) {
+		var offset = this._map._getCenterOffset(opt.center)._add(this._pathViewport.min);
+
+		this._pathRoot.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset);
+
+		this._pathZooming = true;
+	},
+
+	_projectCoordinatesToLatLngs: function() {
+		var origin = this._map.latLngToLayerPoint(this._latlng),
+			layerPoint;
+
+		this._latlngs = [];
+
+		for (var i = 0, length = this._coordinates.length; i < length; i++) {
+			layerPoint = this._coordinates[i]._add(origin);
+			this._latlngs[i] = this._map.layerPointToLatLng(layerPoint);
+		}
+	},
+
+	_bindListeners: function() {
+		this._map.on('zoomanim', this._animateZoom, this);
+	},
+
+	_initPathRoot: function() {
+		if (!this._pathRoot) {
+			this._pathRoot = L.Path.prototype._createElement('svg');
+			this._map._panes.overlayPane.appendChild(this._pathRoot);
+		}
+		this._updateSvgViewport();
+	},
+
+	_updateSvgViewport: function() {
+		if (this._pathZooming) {
+			// Do not update SVGs while a zoom animation is going on otherwise the animation will break.
+			// When the zoom animation ends we will be updated again anyway
+			// This fixes the case where you do a momentum move and zoom while the move is still ongoing.
+			return;
+		}
+
+		L.Map.prototype._updatePathViewport.call(this._map);
+		this._pathViewport = this._map._pathViewport;
+
+		var vp = this._pathViewport,
+		    min = vp.min,
+		    max = vp.max,
+		    width = max.x - min.x,
+		    height = max.y - min.y,
+		    root = this._pathRoot,
+		    pane = this._map._panes.overlayPane;
+
+		// Hack to make flicker on drag end on mobile webkit less irritating
+		if (L.Browser.mobileWebkit) {
+			pane.removeChild(root);
+		}
+
+		L.DomUtil.setPosition(root, min);
+		root.setAttribute('width', width);
+		root.setAttribute('height', height);
+		root.setAttribute('viewBox', [min.x, min.y, width, height].join(' '));
+
+		if (L.Browser.mobileWebkit) {
+			pane.appendChild(root);
+		}
 	}
 });
 L.Illustrate.Textbox = L.Class.extend({
@@ -176,7 +304,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	getCenter: function() {
+	getLatLng: function() {
 		return this._latlng;
 	},
 
@@ -267,7 +395,8 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 	},
 
 	options: {
-		textbox: {}
+		textbox: {},
+		pointer: {}
 	},
 
 	initialize: function(options) {
@@ -285,11 +414,18 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 	},
 
 	getModeHandlers: function(map) {
-		return [{
-			enabled: this.options.textbox,
-			handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
-			title: 'Add a textbox'
-		}];
+		return [
+			{
+				enabled: this.options.textbox,
+				handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
+				title: 'Add a textbox'
+			},
+			{
+				enabled: this.options.pointer,
+				handler: new L.Illustrate.Create.Pointer(map, this.options.pointer),
+				title: 'Add a pointer'
+			}
+		];
 	},
 
 	getActions: function() {
@@ -538,7 +674,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	_layerPointToTextboxCoords: function(point, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			origin, textboxCoords;
 
 		if (opt && opt.zoom && opt.center) {
@@ -557,7 +693,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	_textboxCoordsToLayerPoint: function(coord, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			origin, rotated;
 
 		if (opt && opt.zoom && opt.center) {
@@ -605,18 +741,6 @@ L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 		this._handled.setCenter(handle.getLatLng());
 
 		this._handled.fire('illustrate:handledrag');
-	}
-});
-L.Illustrate.Pointer = L.Path.extend({
-	initialize: function(shape, options) {
-		L.Path.prototype.initialize.call(options);
-		this._shape = shape;
-	},
-
-	_initPathRoot: function() {
-		L.Map.prototype._initPathRoot.call(this._map);
-		
-		this._shape._pathRoot = L.extend({}, this._map._pathRoot);
 	}
 });
 L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
@@ -685,7 +809,7 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	_onHandleDrag: function(event) {
 		var handle = event.target,
 			latlng = handle.getLatLng(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
 			theta;
 

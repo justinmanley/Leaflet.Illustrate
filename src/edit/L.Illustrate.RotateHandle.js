@@ -22,7 +22,7 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	_onHandleDrag: function(event) {
 		var handle = event.target,
 			latlng = handle.getLatLng(),
-			center = this._handled.getCenter(),
+			center = this._handled.getLatLng(),
 			point = this._map.latLngToLayerPoint(latlng).subtract(this._map.latLngToLayerPoint(center)),
 			theta;
 
