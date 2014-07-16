@@ -20,13 +20,17 @@ module.exports = function(config) {
       'node_modules/leaflet-draw/dist/leaflet.draw.js',
       'node_modules/leaflet-draw/dist/leaflet.draw.css',
       'node_modules/chai/chai.js',
+      'test/SpecHelper.js',
       'src/L.Illustrate.js',
       'src/extends-core/*.js',
+      'src/base/L.Illustrate.Pointer.js',
+      'src/base/L.Illustrate.Pointer.SVG.js',
+      'src/base/L.Illustrate.Textbox.js',
       'src/create/L.Illustrate.Create.js',
       'src/create/L.Illustrate.Create.*.js',
       'src/L.Illustrate.*.js',
       'src/edit/*.js',
-      'test/*.js'
+      'test/*Spec.js'
     ],
 
 

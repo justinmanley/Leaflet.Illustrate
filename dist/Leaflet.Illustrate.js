@@ -73,64 +73,6 @@ L.RotatableMarker = L.Marker.extend({
 		this._resetZIndex();
 	}
 });
-L.Illustrate.Create = L.Illustrate.Create || {};
-L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
-	// Have *GOT* to refactor this.
-	// Really, I should get the layer point position on click, not the latlng.  There's no need to be endlessly
-	// translating between latlng and layerpoint.
-
-	_fireCreatedEvent: function() {
-		var latlngs = this._poly.getLatLngs(),
-			coordinates = [],
-			origin = this._map.latLngToLayerPoint(latlngs[0]),
-			pointer;
-
-		for (var i = 0, length = latlngs.length; i < length; i++) {
-			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
-		}
-
-		pointer = new L.Illustrate.Pointer(coordinates, latlngs[0], this.options.shapeOptions);
-		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
-	}
-});
-L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
-	statics: {
-		TYPE: 'textbox'
-	},
-
-	options: {
-		shapeOptions: {
-			color: '#4387fd',
-			weight: 2,
-			fill: false,
-			opacity: 1,
-			minWidth: 10,
-			minHeight: 10
-		}
-	},
-
-	initialize: function(map, options) {
-		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
-
-		this.type = L.Illustrate.Create.Textbox.TYPE;
-	},
-
-	_fireCreatedEvent: function() {
-		var latlngs = this._shape.getLatLngs(),
-			center = new L.LatLngBounds(latlngs).getCenter(),
-			corner = latlngs[1],
-			oppositeCorner = latlngs[3],
-			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
-			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
-			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
-			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
-
-		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
-			.setSize(new L.Point(width, height));
-
-		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
-	}
-});
 L.Illustrate.Pointer = L.Polyline.extend({
 	initialize: function(coordinates, anchor, options) {
 		L.Path.prototype.initialize.call(options);
@@ -146,10 +88,8 @@ L.Illustrate.Pointer = L.Polyline.extend({
 			this._initElements();
 			this._initEvents();
 		}
-		this._bindListeners();
 
-		this._projectCoordinatesToLatLngs();
-		this.projectLatlngs();
+		this._projectCoordinatesToLayerPoints();
 		this._updatePath();
 
 		if (this._container) {
@@ -168,35 +108,59 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		return this._latlng;
 	},
 
+	getPoints: function() {
+		return this._coordinates;
+	},
+
+	_getLatLngs: function() {
+		var origin = this._map.latLngToLayerPoint(this._latlng),
+			latlngs = [];
+
+		for (var i = 0, l = this._coordinates.length; i < l; i++) {
+			latlngs[i] = this._map.layerPointToLatLng(this._coordinates[i].add(origin));
+		}
+
+		return latlngs;
+	},
+
+	_projectCoordinatesToLayerPoints: function() {
+		var origin = this._map.latLngToLayerPoint(this._latlng),
+			layerPoint;
+
+		this._layerPoints = [];
+
+		for (var i = 0, length = this._coordinates.length; i < length; i++) {
+			layerPoint = this._coordinates[i].add(origin);
+			this._layerPoints[i] = layerPoint;
+		}
+	},
+
+	_updatePath: function() {
+		this._projectCoordinatesToLayerPoints();
+		this._originalPoints = this._layerPoints;
+		L.Polyline.prototype._updatePath.call(this);
+	}
+});
+L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
 	_initElements: function() {
 		this._initPathRoot();
 		this._initPath();
 		this._initStyle();
 	},
 
-	// rewrite all
 	_animateZoom: function(opt) {
-		var offset = this._map._getCenterOffset(opt.center)._add(this._pathViewport.min);
+		var anchor = this._map.latLngToLayerPoint(this._latlng),
+			newAnchor = this._map._latLngToNewLayerPoint(this._latlng, opt.zoom, opt.center),
+			offset = newAnchor.subtract(anchor);
 
-		this._pathRoot.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset);
-
+		this._pathRoot.style[L.DomUtil.TRANSFORM] =
+			L.DomUtil.getTranslateString(this._pathViewport.min.add(offset));
+		
 		this._pathZooming = true;
 	},
 
-	_projectCoordinatesToLatLngs: function() {
-		var origin = this._map.latLngToLayerPoint(this._latlng),
-			layerPoint;
-
-		this._latlngs = [];
-
-		for (var i = 0, length = this._coordinates.length; i < length; i++) {
-			layerPoint = this._coordinates[i]._add(origin);
-			this._latlngs[i] = this._map.layerPointToLatLng(layerPoint);
-		}
-	},
-
-	_bindListeners: function() {
-		this._map.on('zoomanim', this._animateZoom, this);
+	_endZoom: function() {
+		this._pathZooming = false;
 	},
 
 	_initPathRoot: function() {
@@ -204,7 +168,34 @@ L.Illustrate.Pointer = L.Polyline.extend({
 			this._pathRoot = L.Path.prototype._createElement('svg');
 			this._map._panes.overlayPane.appendChild(this._pathRoot);
 		}
+
+		if (this._map.options.zoomAnimation && L.Browser.any3d) {
+			L.DomUtil.addClass(this._pathRoot, 'leaflet-zoom-animated');
+
+			this._map.on({
+				'zoomanim': this._animateZoom,
+				'zoomend': this._endZoom
+			}, this);
+		} else {
+			L.DomUtil.addClass(this._pathRoot, 'leaflet-zoom-hide');
+		}
+
+		this._map.on('moveend', this._updateSvgViewport, this);
 		this._updateSvgViewport();
+	},
+
+	_getPanePos: function() {
+		return L.DomUtil.getPosition(this._pathRoot);
+	},
+
+	_updatePathViewport: function () {
+		var p = L.Path.CLIP_PADDING,
+		    size = this._map.getSize(),
+		    panePos = this._map._getMapPanePos(),
+		    min = panePos.multiplyBy(-1)._subtract(size.multiplyBy(p)._round()),
+		    max = min.add(size.multiplyBy(1 + p * 2)._round());
+
+		this._pathViewport = new L.Bounds(min, max);
 	},
 
 	_updateSvgViewport: function() {
@@ -215,29 +206,27 @@ L.Illustrate.Pointer = L.Polyline.extend({
 			return;
 		}
 
-		L.Map.prototype._updatePathViewport.call(this._map);
-		this._pathViewport = this._map._pathViewport;
+		this._updatePathViewport();
 
 		var vp = this._pathViewport,
 		    min = vp.min,
 		    max = vp.max,
 		    width = max.x - min.x,
 		    height = max.y - min.y,
-		    root = this._pathRoot,
 		    pane = this._map._panes.overlayPane;
 
 		// Hack to make flicker on drag end on mobile webkit less irritating
 		if (L.Browser.mobileWebkit) {
-			pane.removeChild(root);
+			pane.removeChild(this._pathRoot);
 		}
 
-		L.DomUtil.setPosition(root, min);
-		root.setAttribute('width', width);
-		root.setAttribute('height', height);
-		root.setAttribute('viewBox', [min.x, min.y, width, height].join(' '));
+		L.DomUtil.setPosition(this._pathRoot, min);
+		this._pathRoot.setAttribute('width', width);
+		this._pathRoot.setAttribute('height', height);
+		this._pathRoot.setAttribute('viewBox', [min.x, min.y, width, height].join(' '));
 
 		if (L.Browser.mobileWebkit) {
-			pane.appendChild(root);
+			pane.appendChild(this._pathRoot);
 		}
 	}
 });
@@ -389,6 +378,64 @@ L.Illustrate.Textbox = L.Class.extend({
 	}
 });
 
+L.Illustrate.Create = L.Illustrate.Create || {};
+L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
+	// Have *GOT* to refactor this.
+	// Really, I should get the layer point position on click, not the latlng.  There's no need to be endlessly
+	// translating between latlng and layerpoint.
+
+	_fireCreatedEvent: function() {
+		var latlngs = this._poly.getLatLngs(),
+			coordinates = [],
+			origin = this._map.latLngToLayerPoint(latlngs[0]),
+			pointer;
+
+		for (var i = 0, length = latlngs.length; i < length; i++) {
+			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
+		}
+
+		pointer = new L.Illustrate.Pointer(coordinates, latlngs[0], this.options.shapeOptions);
+		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
+	}
+});
+L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
+	statics: {
+		TYPE: 'textbox'
+	},
+
+	options: {
+		shapeOptions: {
+			color: '#4387fd',
+			weight: 2,
+			fill: false,
+			opacity: 1,
+			minWidth: 10,
+			minHeight: 10
+		}
+	},
+
+	initialize: function(map, options) {
+		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
+
+		this.type = L.Illustrate.Create.Textbox.TYPE;
+	},
+
+	_fireCreatedEvent: function() {
+		var latlngs = this._shape.getLatLngs(),
+			center = new L.LatLngBounds(latlngs).getCenter(),
+			corner = latlngs[1],
+			oppositeCorner = latlngs[3],
+			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
+			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
+			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
+			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
+
+		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
+			.setSize(new L.Point(width, height));
+
+		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+	}
+});
 L.Illustrate.Toolbar = L.Toolbar.extend({
 	statics: {
 		TYPE: 'illustrate'

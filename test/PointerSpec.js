@@ -14,27 +14,44 @@ describe("L.Illustrate.Pointer", function() {
 		expect(pointer).to.have.property("_latlng");
 	});
 
-	it("Should add to the map successfully and the geographic position of the anchor point should remain fixed during zoom.", function() {
-		var path = [
-				new L.Point(0,100),
-				new L.Point(100, 200),
-				new L.Point(500, 200)
-			],
-			anchor = new L.LatLng(41.7918, -87.6010),
-			pointer = new L.Illustrate.Pointer(path, anchor);
+	describe("#_getLatLngs", function() {
+		it("Anchor point is latlng of first point with first coordinate [0, 0].", function() {
+			var anchor = new L.LatLng(41.7918, -87.6010),
+				pointer = new L.Illustrate.Pointer([new L.Point(0,0)], anchor).addTo(map),
+				latlngs = pointer._getLatLngs();
 
-		pointer.addTo(map);
-		expect(pointer).to.have.property("_map");
-
-		pointer._map.fire('zoomanim', {
-			center: new L.LatLng(41.7886, -87.6115),
-			zoom: 14,
-			origin: new L.Point(651, 273),
-			scale: 0.5,
-			delta: null,
-			backwards: true
+			expect(latlngs[0]).to.be.closeToLatLng(pointer._latlng);
 		});
-		expect(pointer.getLatLng()).to.deep.equal(anchor);
+	});
+
+	describe("#_animateZoom", function() {
+		it("Origin is preserved during zoom.", function() {
+			var anchor = new L.LatLng(41.7918, -87.6010),
+				pointer = new L.Illustrate.Pointer([new L.Point(0,0)], anchor),
+				latlngs;
+			pointer.addTo(map);
+
+			// map.setZoom(14);
+
+			// pointer._map.fire('zoomstart');
+			pointer._map.fire('zoomanim', {
+				center: new L.LatLng(41.7886, -87.6115),
+				zoom: 14,
+				origin: new L.Point(651, 273),
+				scale: 0.5,
+				delta: null,
+				backwards: true
+			});
+			// pointer._map.fire('zoomend');
+
+			latlngs = pointer._getLatLngs();
+
+			expect(latlngs[0]).to.be.closeToLatLng(pointer._latlng);
+		});
+
+		it("", function() {
+
+		});
 	});
 
 	beforeEach(function() {
