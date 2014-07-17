@@ -27,7 +27,8 @@
     "leaflet-draw": "0.2.3",
     "matchdep": "~0.3.0",
     "mocha": "~1.14.0",
-    "uglify-js": "~2.4.3"
+    "uglify-js": "~2.4.3",
+    "sinon": "1.10.3"
   },
   "peerDependencies": {
     "grunt-cli": "0.1.13"

@@ -82,7 +82,8 @@ module.exports = function(grunt) {
                     after: false,
                     beforeEach: false,
                     afterEach: false,
-                    chai: false
+                    chai: false,
+                    sinon: false
                 }
             },
             source: {
@@ -112,9 +113,14 @@ module.exports = function(grunt) {
         },
 
         karma: {
-            unit: {
+            continuous: {
                 configFile: 'karma.conf.js',
                 background: true
+            },
+            unit: {
+                configFile: 'karma.conf.js',
+                background: false,
+                singleRun: true
             }
         },
 
@@ -135,7 +141,7 @@ module.exports = function(grunt) {
                 ],
                 tasks: [
                     'jshint',
-                    'karma:unit:run',
+                    'karma:continuous:run',
                     'coverage',
                     'concat:dist',
                     'less'
@@ -172,10 +178,10 @@ module.exports = function(grunt) {
     });
 
     //single run tests
-    grunt.registerTask('test', ['jshint:test', 'karma:unit:start', 'karma:unit:run']);
+    grunt.registerTask('test', ['jshint:test', 'karma:unit']);
 
     //defaults
-    grunt.registerTask('default', ['karma:unit:start', 'watch:source']);
+    grunt.registerTask('default', ['karma:continuous:start', 'watch:source']);
 
     //development
     grunt.registerTask('dev', ['connect:devserver', 'open:devserver', 'watch:source']);

@@ -27,32 +27,42 @@ if (!Array.prototype.map) {
 
 chai.use(function(chai, utils) {
 	var Assertion = chai.Assertion;
-	Assertion.addMethod('closeToLatLng', function(expected, delta, message) {
+	Assertion.addMethod('closeToLatLng', function(actual, delta, message) {
 		var obj = utils.flag(this, 'object');
 
 		delta = delta || 1e-4;	
 
-		expect(expected).to.have.property('lat');
-		expect(expected).to.have.property('lng');
+		expect(obj).to.have.property('lat');
+		expect(obj).to.have.property('lng');
 
-		new Assertion(obj.lat).to.be.closeTo(expected.lat, delta, message);
-		new Assertion(obj.lng).to.be.closeTo(expected.lng, delta, message);
+		var lat = new Assertion(obj.lat),
+			lng = new Assertion(obj.lng);
 
+		utils.transferFlags(this, lat, false);
+		utils.transferFlags(this, lng, false);
+
+		lat.to.be.closeTo(actual.lat, delta, message);
+		lng.to.be.closeTo(actual.lng, delta, message);
 	});
 });
 
 chai.use(function(chai, utils) {
 	var Assertion = chai.Assertion;
-	Assertion.addMethod('closeToPoint', function(expected, delta, message) {
+	Assertion.addMethod('closeToPoint', function(actual, delta, message) {
 		var obj = utils.flag(this, 'object');
 
 		delta = delta || 1;	
 
-		expect(expected).to.have.property('x');
-		expect(expected).to.have.property('y');
+		new Assertion(obj).to.have.property('x');
+		new Assertion(obj).to.have.property('y');
 
-		new Assertion(obj.x).to.be.closeTo(expected.x, delta, message);
-		new Assertion(obj.y).to.be.closeTo(expected.y, delta, message);
+		var x = new Assertion(obj.x),
+			y = new Assertion(obj.y);
 
+		utils.transferFlags(this, x, false);
+		utils.transferFlags(this, y, false);
+
+		x.to.be.closeTo(actual.x, delta, message);
+		y.to.be.closeTo(actual.y, delta, message);
 	});
 });

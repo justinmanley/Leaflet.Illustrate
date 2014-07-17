@@ -15,11 +15,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'node_modules/leaflet/dist/leaflet.js',
+      'node_modules/leaflet/dist/leaflet-src.js',
       'node_modules/leaflet/dist/leaflet.css',
       'node_modules/leaflet-draw/dist/leaflet.draw.js',
       'node_modules/leaflet-draw/dist/leaflet.draw.css',
       'node_modules/chai/chai.js',
+      'node_modules/sinon/pkg/sinon-1.10.3.js',
       'test/SpecHelper.js',
       'src/L.Illustrate.js',
       'src/extends-core/*.js',
@@ -73,7 +74,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox', 'Safari'],
+    browsers: ['Chrome'],
 
     plugins: [
       'karma-mocha',
