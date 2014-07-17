@@ -42,24 +42,18 @@ describe("L.Illustrate.Pointer", function() {
 		it.skip("Other points are not preserved during zoom.", function(done) {
 			var anchor = new L.LatLng(41.7918, -87.6010),
 				pointer = new L.Illustrate.Pointer([new L.Point(0, 0), new L.Point(0, 400)], anchor).addTo(map),
-				origRequestAnimFrame = L.Util.requestAnimFrame,
-				requestAnimFrame = sinon.stub(L.Util, "requestAnimFrame", function(f, c, i) {
-					origRequestAnimFrame(f, c, i);
-					done();
-				}),
 				initialLatLngs = pointer._getLatLngs(),
 				latlngs;
 
 			pointer._map.setZoom(pointer._map.getZoom() - 1);
 
-			latlngs = pointer._getLatLngs();
+			map.on('zoomend', function() {
+				latlngs = pointer._getLatLngs();
+				expect(fire.calledWith('zoomanim')).to.equal(true);
 
-			expect(fire.calledWith('zoomanim')).to.equal(true);
-			expect(fire.calledWith('zoomend')).to.equal(true);
-
-			expect(latlngs[1]).to.not.be.closeToLatLng(initialLatLngs[1]);
-
-			requestAnimFrame.restore();
+				expect(latlngs[1]).to.not.be.closeToLatLng(initialLatLngs[1]);
+				done();
+			});
 		});
 	});
 
