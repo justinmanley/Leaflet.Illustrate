@@ -15,23 +15,23 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'node_modules/leaflet/dist/leaflet-src.js',
-      'node_modules/leaflet/dist/leaflet.css',
-      'node_modules/leaflet-draw/dist/leaflet.draw.js',
-      'node_modules/leaflet-draw/dist/leaflet.draw.css',
-      'node_modules/chai/chai.js',
-      'node_modules/sinon/pkg/sinon-1.10.3.js',
-      'test/SpecHelper.js',
-      'src/L.Illustrate.js',
-      'src/extends-core/*.js',
-      'src/base/L.Illustrate.Pointer.js',
-      'src/base/L.Illustrate.Pointer.SVG.js',
-      'src/base/L.Illustrate.Textbox.js',
-      'src/create/L.Illustrate.Create.js',
-      'src/create/L.Illustrate.Create.*.js',
-      'src/L.Illustrate.*.js',
-      'src/edit/*.js',
-      'test/*Spec.js'
+      '../node_modules/leaflet/dist/leaflet-src.js',
+      '../node_modules/leaflet/dist/leaflet.css',
+      '../node_modules/leaflet-draw/dist/leaflet.draw.js',
+      '../node_modules/leaflet-draw/dist/leaflet.draw.css',
+      '../node_modules/chai/chai.js',
+      '../node_modules/sinon/pkg/sinon-1.10.3.js',
+      '../test/SpecHelper.js',
+      '../src/L.Illustrate.js',
+      '../src/extends-leaflet/*.js',
+      '../src/core/L.Illustrate.Pointer.js',
+      '../src/core/L.Illustrate.Pointer.SVG.js',
+      '../src/core/L.Illustrate.Textbox.js',
+      '../src/create/L.Illustrate.Create.js',
+      '../src/create/L.Illustrate.Create.*.js',
+      '../src/L.Illustrate.*.js',
+      '../src/edit/*.js',
+      '../test/*/*Spec.js'
     ],
 
 
@@ -52,7 +52,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['mocha', 'coverage'],
+    reporters: [ 'mocha', 'coverage' ],
 
 
     // web server port
@@ -91,7 +91,7 @@ module.exports = function(config) {
 
     coverageReporter: {
       type: 'text',
-      dir: 'coverage/',
+      dir: '../coverage/',
       file: 'coverage.txt'
     }
   });

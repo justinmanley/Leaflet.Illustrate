@@ -71,7 +71,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragend', this._onHandleDragEnd, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('illustrate:handledrag', this.updateHandle, this);
+		this._handled.on('shape-change', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {

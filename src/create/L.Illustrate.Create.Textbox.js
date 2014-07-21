@@ -4,17 +4,24 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	},
 
 	options: {
-		shapeOptions: {
-			color: '#4387fd',
-			weight: 2,
-			fill: false,
-			opacity: 1,
+		/* Set dynamically using this._setShapeOptions() */
+		shapeOptions: {},
+
+		textOptions: {
 			minWidth: 10,
 			minHeight: 10
 		}
 	},
 
 	initialize: function(map, options) {
+		this.options.textOptions = L.extend({}, this.options.textOptions, options);
+		this._setShapeOptions();
+
+		/* 
+		 * A <textarea> element can only be drawn from upper-left to lower-right. 
+		 * Implement drawing using L.Draw.Rectangle so that a textbox can be drawn in any direction,
+		 * then return a L.Illustrate.Textbox instance once drawing is complete.
+		 */
 		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
 
 		this.type = L.Illustrate.Create.Textbox.TYPE;
@@ -30,9 +37,22 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
 			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
 
-		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
+		var textbox = new L.Illustrate.Textbox(center, this.options.textOptions)
 			.setSize(new L.Point(width, height));
 
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+	},
+
+	_setShapeOptions: function() {
+		/* shapeOptions are set dynamically so that the Rectangle looks the same as the Textbox. */
+		var borderWidth = this.options.textOptions.borderWidth ? this.options.textOptions.borderWidth : 2,
+			borderColor = this.options.textOptions.borderColor ? this.options.textOptions.borderColor : '#4387fd';
+
+		this.options.shapeOptions = L.extend({}, this.options.shapeOptions, {
+			weight: borderWidth,
+			color: borderColor,
+			fill: false,
+			opacity: 0
+		});
 	}
 });

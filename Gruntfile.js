@@ -90,7 +90,7 @@ module.exports = function(grunt) {
                 src: [ 'src/*.js', 'src/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
             test: {
-                src: [ 'test/*Spec.js' ],
+                src: [ 'test/*/*Spec.js' ],
             },
             grunt: {
                 src: ['Gruntfile.js']
@@ -114,11 +114,11 @@ module.exports = function(grunt) {
 
         karma: {
             continuous: {
-                configFile: 'karma.conf.js',
+                configFile: 'test/karma.conf.js',
                 background: true
             },
             unit: {
-                configFile: 'karma.conf.js',
+                configFile: 'test/karma.conf.js',
                 background: false,
                 singleRun: true
             }
@@ -130,13 +130,12 @@ module.exports = function(grunt) {
             },
             source: {
                 files: [
-                    'src/extends-core/*.js',
+                    'src/extends-leaflet/*.js',
                     'src/*.js',
-                    'src/base/*.js',
-                    'src/create/*.js',
-                    'src/edit/*.js',
+                    'src/*/*.js',
                     'src/Leaflet.Illustrate.less',
-                    'test/*Spec.js',
+                    'test/*.js',
+                    'test/*/*Spec.js',
                     'Gruntfile.js'
                 ],
                 tasks: [
@@ -163,10 +162,10 @@ module.exports = function(grunt) {
                 },
                 src: [
                     'src/L.Illustrate.js',
-                    'src/extends-core/*.js',
-                    'src/base/L.Illustrate.Pointer.js',
-                    'src/base/L.Illustrate.Pointer.SVG.js',
-                    'src/base/L.Illustrate.Textbox.js',
+                    'src/extends-leaflet/*.js',
+                    'src/core/L.Illustrate.Pointer.js',
+                    'src/core/L.Illustrate.Pointer.SVG.js',
+                    'src/core/L.Illustrate.Textbox.js',
                     'src/create/L.Illustrate.Create.js',
                     'src/create/L.Illustrate.Create.*.js',
                     'src/L.Illustrate.*.js',
@@ -177,17 +176,11 @@ module.exports = function(grunt) {
         }
     });
 
-    //single run tests
-    grunt.registerTask('test', ['jshint:test', 'karma:unit']);
+    /* Run tests once. */
+    grunt.registerTask('test', ['jshint:test', 'karma:unit', 'coverage' ]);
 
-    //defaults
+    /* Default (development): Watch files and lint, test, and build on change. */
     grunt.registerTask('default', ['karma:continuous:start', 'watch:source']);
-
-    //development
-    grunt.registerTask('dev', ['connect:devserver', 'open:devserver', 'watch:source']);
-
-    //server daemon
-    grunt.registerTask('serve', ['connect:webserver']);
 
     grunt.registerTask('coverage', "Custom commmand-line reporter for karma-coverage", function() {
         var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),

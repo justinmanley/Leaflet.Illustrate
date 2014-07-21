@@ -25,7 +25,7 @@ describe("L.Illustrate.Pointer", function() {
 	});
 
 	describe("#_animateZoom", function() {
-		it("Origin is preserved during zoom.", function(done) {
+		it.skip("Origin is preserved during zoom.", function(done) {
 			var anchor = new L.LatLng(41.7918, -87.6010),
 				pointer = new L.Illustrate.Pointer([new L.Point(0,0)], anchor).addTo(map),
 				latlngs;

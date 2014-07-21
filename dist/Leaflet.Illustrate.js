@@ -238,13 +238,16 @@ L.Illustrate.Textbox = L.Class.extend({
 	includes: [L.Mixin.Events],
 
 	options: {
-		color: '#db1d0f'
+
 	},
 
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
+
 		this._latlng = latlng;
 		this._initTextbox();
+
+		this._handlers = [];
 	},
 
 	_initTextbox: function() {
@@ -265,6 +268,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._updateSize();
 
 		this._enableTyping();
+		// this.addHandler('textselect', L.Illustrate.Textbox.Select);
 
 		L.DomUtil.addClass(this._textbox._icon.children[0], 'leaflet-illustrate-textbox-outlined');
 
@@ -285,10 +289,25 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox = null;
 	},
 
+	// addHandler: function(name, HandlerClass) {
+	// 	if (!HandlerClass) { return this; }
+
+	// 	var handler = this[name] = new HandlerClass(this);
+
+	// 	this._handlers.push(handler);
+
+	// 	if (this.options[name]) {
+	// 		handler.enable();
+	// 	}
+
+	// 	return this;
+	// },
+
 	setCenter: function(latlng) {
 		this._latlng = latlng;
 
 		this._updateCenter();
+		this.fire('shape-change');
 
 		return this;
 	},
@@ -306,6 +325,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._height = size.y;
 
 		this._updateSize();
+		this.fire('shape-change');
 
 		return this;
 	},
@@ -313,6 +333,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	setRotation: function(theta) {
 		this._textbox.setRotation(theta % (2*Math.PI));
 		this._textbox.update();
+		this.fire('shape-change');
 		return this;
 	},
 
@@ -339,45 +360,92 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_enableTyping: function() {
-		var map = this._map,
-			textarea = this._textbox._icon.children[0],
-			mapDraggable;
+		// var textarea = this._textbox._icon.children[0];
 
+		// L.DomEvent.on(textarea, 'mousemove', function() {
+		// 	console.log('mousemove');
+		// });
 
-		L.DomEvent.on(this._textbox._icon, 'click', function(event) {
+		// var map = this._map,
+			// textarea = this._textbox._icon.children[0],
+			// mapDraggable;
+
+		L.DomEvent.off(window, 'drag', L.DomEvent.preventDefault);
+		L.DomEvent.off(window, 'dragstart', L.DomEvent.preventDefault);
+
+		this._textbox.on('drag', function() {
+			console.log('drag');
+		});
+
+		L.DomEvent.on(this._textbox._icon.children[0], 'dblclick', function(event) {
 			event.target.focus();
-		});
+			this._map.dragging.disable();
+		}, this);
 
-		L.DomEvent.on(textarea, 'focus', function(event) {
-			// not sure why this doesn't work
-			L.DomUtil.enableTextSelection();
-			L.DomEvent.off(event.target, 'selectstart', L.DomEvent.preventDefault);
+		L.DomEvent.on(this._textbox._icon.children[0], 'mouseout', function() {
+			this._map.dragging.enable();
+		}, this);
 
-			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
-			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
+		// L.DomEvent.on(textarea, 'focus', function(event) {
+		// 	// not sure why this doesn't work
+		// 	L.DomUtil.enableTextSelection();
+		// 	L.DomEvent.off(event.target, 'selectstart', L.DomEvent.preventDefault);
 
-			mapDraggable = map.dragging.enabled();
-			if (mapDraggable) {
-				map.dragging.disable();
-			}
-		});
+		// 	L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
+		// 	L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
 
-		L.DomEvent.on(textarea, 'blur', function(event) {
-			// not sure why this doesn't work
-			L.DomUtil.disableTextSelection();
-			L.DomEvent.on(event.target, 'selectstart', L.DomEvent.preventDefault);
+		// 	mapDraggable = map.dragging.enabled();
+		// 	if (mapDraggable) {
+		// 		map.dragging.disable();
+		// 	}
+		// });
 
-			L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
-			L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
+		// L.DomEvent.on(textarea, 'blur', function(event) {
+		// 	// not sure why this doesn't work
+		// 	L.DomUtil.disableTextSelection();
+		// 	L.DomEvent.on(event.target, 'selectstart', L.DomEvent.preventDefault);
 
-			mapDraggable = map.dragging.enabled();
-			if (!mapDraggable) {
-				map.dragging.enable();
-			}
-		});
+		// 	L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
+		// 	L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
+
+		// 	mapDraggable = map.dragging.enabled();
+		// 	if (!mapDraggable) {
+		// 		map.dragging.enable();
+		// 	}
+		// });
 	}
 });
 
+// L.Illustrate.Textbox.Select = L.Handler.extend({
+// 	addHooks: function() {
+// 		if (!this._selectable) {
+// 			this._selectable = new L.Draggable(this._map._textbox._icon.children[0]);
+
+// 			this._selectable.on({
+// 				'dragstart': this._onDragStart,
+// 				'dragend': this._onDragEnd,
+// 				'drag': this._onDrag
+// 			});
+// 		}
+// 		this._selectable.enable();
+// 	},
+
+// 	removeHooks: function() {
+// 		this._selectable.disable();
+// 	},
+
+// 	_onDragStart: function() {
+// 		console.log('LOG dragstart');
+// 	},
+
+// 	_onDrag: function() {
+// 		console.log('LOG drag');
+// 	},
+
+// 	_onDragEnd: function() {
+// 		console.log('LOG dragend');
+// 	}
+// });
 L.Illustrate.Create = L.Illustrate.Create || {};
 L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 	// Have *GOT* to refactor this.
@@ -404,17 +472,24 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	},
 
 	options: {
-		shapeOptions: {
-			color: '#4387fd',
-			weight: 2,
-			fill: false,
-			opacity: 1,
+		/* Set dynamically using this._setShapeOptions() */
+		shapeOptions: {},
+
+		textOptions: {
 			minWidth: 10,
 			minHeight: 10
 		}
 	},
 
 	initialize: function(map, options) {
+		this.options.textOptions = L.extend({}, this.options.textOptions, options);
+		this._setShapeOptions();
+
+		/* 
+		 * A <textarea> element can only be drawn from upper-left to lower-right. 
+		 * Implement drawing using L.Draw.Rectangle so that a textbox can be drawn in any direction,
+		 * then return a L.Illustrate.Textbox instance once drawing is complete.
+		 */
 		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
 
 		this.type = L.Illustrate.Create.Textbox.TYPE;
@@ -430,10 +505,23 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
 			height = oppositeCornerPixelCoordinates.y - cornerPixelCoordinates.y + 2;
 
-		var textbox = new L.Illustrate.Textbox(center, this.options.shapeOptions)
+		var textbox = new L.Illustrate.Textbox(center, this.options.textOptions)
 			.setSize(new L.Point(width, height));
 
 		L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, textbox);
+	},
+
+	_setShapeOptions: function() {
+		/* shapeOptions are set dynamically so that the Rectangle looks the same as the Textbox. */
+		var borderWidth = this.options.textOptions.borderWidth ? this.options.textOptions.borderWidth : 2,
+			borderColor = this.options.textOptions.borderColor ? this.options.textOptions.borderColor : '#4387fd';
+
+		this.options.shapeOptions = L.extend({}, this.options.shapeOptions, {
+			weight: borderWidth,
+			color: borderColor,
+			fill: false,
+			opacity: 0
+		});
 	}
 });
 L.Illustrate.Toolbar = L.Toolbar.extend({
@@ -708,7 +796,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragend', this._onHandleDragEnd, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('illustrate:handledrag', this.updateHandle, this);
+		this._handled.on('shape-change', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {
