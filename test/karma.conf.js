@@ -82,7 +82,8 @@ module.exports = function(config) {
       'karma-firefox-launcher',
       'karma-safari-launcher',
       'karma-mocha-reporter',
-      'karma-coverage'
+      'karma-coverage',
+      'karma-coveralls'
     ],
 
     // Continuous Integration mode
@@ -90,9 +91,10 @@ module.exports = function(config) {
     singleRun: false,
 
     coverageReporter: {
-      type: 'text',
-      dir: '../coverage/',
-      file: 'coverage.txt'
+      reporters: [
+        { type: 'text', dir: '../coverage/', file: 'coverage.txt' },
+        { type: 'lcovonly', dir: '../coverage/' }
+      ]
     }
   });
 };
