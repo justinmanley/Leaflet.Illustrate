@@ -47,86 +47,31 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_createPointer: function() {
-		var map = this._handled._map,
-			handleLatLng = map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset)
-			),
-			topMiddleLatLng = map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
-			),
-			handleLineOptions = L.extend(this._handled.options, {
-				weight: Math.round(this._handled.options.weight/2)
-			});
+		var options = {
+			color: this._handled.options.borderColor,
+			weight: Math.round(this._handled.options.borderWidth)
+		};
 
-		this._pointer = new L.Polyline([handleLatLng, topMiddleLatLng], handleLineOptions);
+		this._pointerStart = this._handleOffset.multiplyBy(0.5);
+		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [
+			this._pointerStart,
+			this._handleOffset
+		], options);
+
+		this._handled.on({ 'update': this._updatePointer }, this);
 	},
 
 	_updatePointer: function() {
-		var topMiddleLatLng = this._map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
-			);
+		var map = this._handled._map,
+			center = this._handled.getLatLng(),
+			origin = map.latLngToLayerPoint(center);
 
-		this._pointer.setLatLngs([
-			this._textboxCoordsToLatLng(this._handleOffset),
-			topMiddleLatLng
+		this._pointerStart = this._handleOffset.multiplyBy(0.5);
+
+		this._pointer.setLatLng(center);
+		this._pointer.setPoints([
+			this._textboxCoordsToLayerPoint(this._pointerStart).subtract(origin),
+			this._textboxCoordsToLayerPoint(this._handleOffset).subtract(origin)
 		]);
-	},
-
-	/* Stops the pointer from jumping up/down on zoom in/out. */
-	_animatePointerOnZoom: function(opt) {
-		var map = this._handled._map,
-			pointer = this._pointer._path,
-			handleLatLng = map._newLayerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
-			),
-			midpoint = map._newLayerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
-			);
-
-		L.DomUtil.addClass(pointer, 'leaflet-path-zoom-separately');
-
-		var scale = map.getZoomScale(opt.zoom),
-			offset = - map._getCenterOffset(opt.center)._multiplyBy(-scale)._add(map._pathViewport.min);
-
-		pointer.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset);
-
-		this._pathZooming = true;
-
-		this._pointer.setLatLngs([handleLatLng, midpoint]);
-	},
-
-	_initPointerAnimation: function(newCoords) {
-		var map = this._handled._map,
-			newPolyline = new L.Polyline(newCoords).addTo(map),
-			newPath;
-
-		this._pointerAnimation = document.createElementNS(L.Path.SVG_NS, 'animate');
-
-		newPolyline._updatePath();
-
-		newPath = newPolyline.getPathString();
-
-		this._pointerAnimation.setAttribute("attributeName", "d");
-		this._pointerAnimation.setAttribute("dur", "0.25s");
-		this._pointerAnimation.setAttribute("values", this._pointer.getPathString() + "; " + newPath + ";");
-
-		map.removeLayer(newPolyline);
-
-		this._pointer._path.appendChild(this._pointerAnimation);
-	},
-
-	_disableDefaultZoom: function() {
-
-	},
-
-	_enableDefaultZoom: function() {
-
-	},
-
-	_bindListeners: function() {
-		L.Illustrate.EditHandle.prototype._bindListeners.call(this);
-		this._handled._map
-			.on('zoomanim', this._animatePointerOnZoom, this)
-			.on('zoomend', this._updatePointer, this);
 	}
 });

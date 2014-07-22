@@ -1,6 +1,10 @@
-L.Illustrate.Pointer = L.Polyline.extend({
-	initialize: function(coordinates, anchor, options) {
-		L.Path.prototype.initialize.call(options);
+L.Illustrate.Pointer = L.Path.extend({
+	options: {
+		noClip: false
+	},
+
+	initialize: function(anchor, coordinates, options) {
+		L.Path.prototype.initialize.call(this, options);
 
 		this._coordinates = coordinates;
 		this._latlng = anchor;
@@ -14,7 +18,6 @@ L.Illustrate.Pointer = L.Polyline.extend({
 			this._initEvents();
 		}
 
-		this._projectCoordinatesToLayerPoints();
 		this._updatePath();
 
 		if (this._container) {
@@ -24,6 +27,7 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		this.fire('add');
 
 		map.on({
+			'viewreset': this._updatePath,
 			'moveend': this._updatePath
 		}, this);
 	},
@@ -33,8 +37,32 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		return this._latlng;
 	},
 
+	setLatLng: function(latlng) {
+		this._latlng = latlng;
+
+		this._updatePath();
+
+		return this;
+	},
+
 	getPoints: function() {
 		return this._coordinates;
+	},
+
+	setPoints: function(points) {
+		this._coordinates = points;
+
+		this._updatePath();
+
+		return this;
+	},
+
+	getPathString: function() {
+		return L.Polyline.prototype.getPathString.call(this);
+	},
+
+	_getPathPartStr: function(points) {
+		return L.Polyline.prototype._getPathPartStr.call(this, points);
 	},
 
 	_getLatLngs: function() {
@@ -60,9 +88,48 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		}
 	},
 
+	_clipPoints: function () {
+		var points = this._layerPoints,
+		    len = points.length,
+		    i, k, segment;
+
+		if (this.options.noClip) {
+			this._parts = [points];
+			return;
+		}
+
+		this._parts = [];
+
+		var parts = this._parts,
+		    vp = this._pathViewport,
+		    lu = L.LineUtil;
+
+		for (i = 0, k = 0; i < len - 1; i++) {
+			segment = lu.clipSegment(points[i], points[i + 1], vp, i);
+			if (!segment) {
+				continue;
+			}
+
+			parts[k] = parts[k] || [];
+			parts[k].push(segment[0]);
+
+			// if segment goes out of screen, or it's the last one, it's the end of the line part
+			if ((segment[1] !== points[i + 1]) || (i === len - 2)) {
+				parts[k].push(segment[1]);
+				k++;
+			}
+		}
+	},
+
 	_updatePath: function() {
+		if (!this._map) { return; }
+
 		this._projectCoordinatesToLayerPoints();
-		this._originalPoints = this._layerPoints;
-		L.Polyline.prototype._updatePath.call(this);
+		this._clipPoints();
+
+		L.Path.prototype._updatePath.call(this);
+
+		this._projectCoordinatesToLayerPoints();
+
 	}
 });

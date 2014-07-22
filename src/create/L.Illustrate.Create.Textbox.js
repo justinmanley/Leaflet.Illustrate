@@ -8,6 +8,8 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		shapeOptions: {},
 
 		textOptions: {
+			borderColor: '#4387fd',
+			borderWidth: 2,
 			minWidth: 10,
 			minHeight: 10
 		}
@@ -52,7 +54,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			weight: borderWidth,
 			color: borderColor,
 			fill: false,
-			opacity: 0
+			opacity: 1
 		});
 	}
 });

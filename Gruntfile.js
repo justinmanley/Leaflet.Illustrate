@@ -138,13 +138,7 @@ module.exports = function(grunt) {
                     'test/*/*Spec.js',
                     'Gruntfile.js'
                 ],
-                tasks: [
-                    'jshint',
-                    'karma:continuous:run',
-                    'coverage',
-                    'concat:dist',
-                    'less'
-                ]
+                tasks: [ 'build' ]
             }
         },
 
@@ -181,6 +175,14 @@ module.exports = function(grunt) {
 
     /* Default (development): Watch files and lint, test, and build on change. */
     grunt.registerTask('default', ['karma:continuous:start', 'watch:source']);
+
+    grunt.registerTask('build', [
+        'jshint',
+        'karma:continuous:run',
+        'coverage',
+        'concat:dist',
+        'less'
+    ]);
 
     grunt.registerTask('coverage', "Custom commmand-line reporter for karma-coverage", function() {
         var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),

@@ -23,12 +23,12 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
+
+		this._bindListeners();
 	},
 
 	onAdd: function(map) {
 		L.RotatableMarker.prototype.onAdd.call(this, map);
-
-		this._bindListeners();
 	},
 
 	_animateZoom: function(opt) {
@@ -71,7 +71,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragend', this._onHandleDragEnd, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('shape-change', this.updateHandle, this);
+		this._handled.on('update', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {
@@ -81,6 +81,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		).round();
 	},
 
+	/* Perhaps this should be moved to L.Illustrate.Textbox? */
 	_layerPointToTextboxCoords: function(point, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
@@ -100,6 +101,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		return this._calculateRotation(textboxCoords, - rotation);
 	},
 
+	/* Perhaps this should be moved to L.Illustrate.Textbox? */
 	_textboxCoordsToLayerPoint: function(coord, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),

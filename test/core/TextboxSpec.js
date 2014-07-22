@@ -7,35 +7,8 @@ var expect = chai.expect;
 describe("L.Illustrate.Textbox", function() {
 	var map, mapDiv, textbox;
 
-	describe("#_enableTyping", function() {
-		expect(1).to.equal(1);
-	});
-
 	beforeEach(function() {
-		mapDiv = document.createElement('div');
-		mapDiv.id = 'map';
-		document.body.appendChild(mapDiv);
-
-		map = L.map('map').setView([41.7896,-87.5996], 15);
-		L.tileLayer("http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
-			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
-		}).addTo(map);
-
-		var drawnItems = new L.FeatureGroup();
-		map.addLayer(drawnItems);
-
-		var illustrateControl = new L.Illustrate.Control({
-			edit: {
-				featureGroup: drawnItems
-			}
-		});
-		map.addControl(illustrateControl);
-
-		map.on('draw:created', function(evt) {
-			var layer = evt.layer;
-
-			drawnItems.addLayer(layer);
-		});
+		map = L.map(document.createElement('div')).setView([41.7896,-87.5996], 15);
 	});
 
 	beforeEach(function() {
@@ -49,5 +22,9 @@ describe("L.Illustrate.Textbox", function() {
 
 	afterEach(function() {
 		mapDiv.parentNode.removeChild(mapDiv);
+	});
+
+	describe("#_enableTyping", function() {
+		expect(1).to.equal(1);
 	});
 });

@@ -73,9 +73,13 @@ L.RotatableMarker = L.Marker.extend({
 		this._resetZIndex();
 	}
 });
-L.Illustrate.Pointer = L.Polyline.extend({
-	initialize: function(coordinates, anchor, options) {
-		L.Path.prototype.initialize.call(options);
+L.Illustrate.Pointer = L.Path.extend({
+	options: {
+		noClip: false
+	},
+
+	initialize: function(anchor, coordinates, options) {
+		L.Path.prototype.initialize.call(this, options);
 
 		this._coordinates = coordinates;
 		this._latlng = anchor;
@@ -89,7 +93,6 @@ L.Illustrate.Pointer = L.Polyline.extend({
 			this._initEvents();
 		}
 
-		this._projectCoordinatesToLayerPoints();
 		this._updatePath();
 
 		if (this._container) {
@@ -99,6 +102,7 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		this.fire('add');
 
 		map.on({
+			'viewreset': this._updatePath,
 			'moveend': this._updatePath
 		}, this);
 	},
@@ -108,8 +112,32 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		return this._latlng;
 	},
 
+	setLatLng: function(latlng) {
+		this._latlng = latlng;
+
+		this._updatePath();
+
+		return this;
+	},
+
 	getPoints: function() {
 		return this._coordinates;
+	},
+
+	setPoints: function(points) {
+		this._coordinates = points;
+
+		this._updatePath();
+
+		return this;
+	},
+
+	getPathString: function() {
+		return L.Polyline.prototype.getPathString.call(this);
+	},
+
+	_getPathPartStr: function(points) {
+		return L.Polyline.prototype._getPathPartStr.call(this, points);
 	},
 
 	_getLatLngs: function() {
@@ -135,10 +163,49 @@ L.Illustrate.Pointer = L.Polyline.extend({
 		}
 	},
 
+	_clipPoints: function () {
+		var points = this._layerPoints,
+		    len = points.length,
+		    i, k, segment;
+
+		if (this.options.noClip) {
+			this._parts = [points];
+			return;
+		}
+
+		this._parts = [];
+
+		var parts = this._parts,
+		    vp = this._pathViewport,
+		    lu = L.LineUtil;
+
+		for (i = 0, k = 0; i < len - 1; i++) {
+			segment = lu.clipSegment(points[i], points[i + 1], vp, i);
+			if (!segment) {
+				continue;
+			}
+
+			parts[k] = parts[k] || [];
+			parts[k].push(segment[0]);
+
+			// if segment goes out of screen, or it's the last one, it's the end of the line part
+			if ((segment[1] !== points[i + 1]) || (i === len - 2)) {
+				parts[k].push(segment[1]);
+				k++;
+			}
+		}
+	},
+
 	_updatePath: function() {
+		if (!this._map) { return; }
+
 		this._projectCoordinatesToLayerPoints();
-		this._originalPoints = this._layerPoints;
-		L.Polyline.prototype._updatePath.call(this);
+		this._clipPoints();
+
+		L.Path.prototype._updatePath.call(this);
+
+		this._projectCoordinatesToLayerPoints();
+
 	}
 });
 L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
@@ -307,7 +374,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._latlng = latlng;
 
 		this._updateCenter();
-		this.fire('shape-change');
+		this.fire('update');
 
 		return this;
 	},
@@ -325,7 +392,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._height = size.y;
 
 		this._updateSize();
-		this.fire('shape-change');
+		this.fire('update');
 
 		return this;
 	},
@@ -333,7 +400,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	setRotation: function(theta) {
 		this._textbox.setRotation(theta % (2*Math.PI));
 		this._textbox.update();
-		this.fire('shape-change');
+		this.fire('update');
 		return this;
 	},
 
@@ -462,7 +529,7 @@ L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
 		}
 
-		pointer = new L.Illustrate.Pointer(coordinates, latlngs[0], this.options.shapeOptions);
+		pointer = new L.Illustrate.Pointer(latlngs[0], coordinates, this.options.shapeOptions);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
 	}
 });
@@ -476,6 +543,8 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		shapeOptions: {},
 
 		textOptions: {
+			borderColor: '#4387fd',
+			borderWidth: 2,
 			minWidth: 10,
 			minHeight: 10
 		}
@@ -520,7 +589,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 			weight: borderWidth,
 			color: borderColor,
 			fill: false,
-			opacity: 0
+			opacity: 1
 		});
 	}
 });
@@ -748,12 +817,12 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
+
+		this._bindListeners();
 	},
 
 	onAdd: function(map) {
 		L.RotatableMarker.prototype.onAdd.call(this, map);
-
-		this._bindListeners();
 	},
 
 	_animateZoom: function(opt) {
@@ -796,7 +865,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			.on('dragend', this._onHandleDragEnd, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('shape-change', this.updateHandle, this);
+		this._handled.on('update', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {
@@ -806,6 +875,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		).round();
 	},
 
+	/* Perhaps this should be moved to L.Illustrate.Textbox? */
 	_layerPointToTextboxCoords: function(point, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
@@ -825,6 +895,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		return this._calculateRotation(textboxCoords, - rotation);
 	},
 
+	/* Perhaps this should be moved to L.Illustrate.Textbox? */
 	_textboxCoordsToLayerPoint: function(coord, opt) {
 		var map = this._handled._map,
 			rotation = this._handled.getRotation(),
@@ -969,87 +1040,32 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_createPointer: function() {
-		var map = this._handled._map,
-			handleLatLng = map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset)
-			),
-			topMiddleLatLng = map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
-			),
-			handleLineOptions = L.extend(this._handled.options, {
-				weight: Math.round(this._handled.options.weight/2)
-			});
+		var options = {
+			color: this._handled.options.borderColor,
+			weight: Math.round(this._handled.options.borderWidth)
+		};
 
-		this._pointer = new L.Polyline([handleLatLng, topMiddleLatLng], handleLineOptions);
+		this._pointerStart = this._handleOffset.multiplyBy(0.5);
+		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [
+			this._pointerStart,
+			this._handleOffset
+		], options);
+
+		this._handled.on({ 'update': this._updatePointer }, this);
 	},
 
 	_updatePointer: function() {
-		var topMiddleLatLng = this._map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(new L.Point(0, -Math.round(this._handled.getSize().y/2)))
-			);
+		var map = this._handled._map,
+			center = this._handled.getLatLng(),
+			origin = map.latLngToLayerPoint(center);
 
-		this._pointer.setLatLngs([
-			this._textboxCoordsToLatLng(this._handleOffset),
-			topMiddleLatLng
+		this._pointerStart = this._handleOffset.multiplyBy(0.5);
+
+		this._pointer.setLatLng(center);
+		this._pointer.setPoints([
+			this._textboxCoordsToLayerPoint(this._pointerStart).subtract(origin),
+			this._textboxCoordsToLayerPoint(this._handleOffset).subtract(origin)
 		]);
-	},
-
-	/* Stops the pointer from jumping up/down on zoom in/out. */
-	_animatePointerOnZoom: function(opt) {
-		var map = this._handled._map,
-			pointer = this._pointer._path,
-			handleLatLng = map._newLayerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
-			),
-			midpoint = map._newLayerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset, opt), opt.zoom, opt.center
-			);
-
-		L.DomUtil.addClass(pointer, 'leaflet-path-zoom-separately');
-
-		var scale = map.getZoomScale(opt.zoom),
-			offset = - map._getCenterOffset(opt.center)._multiplyBy(-scale)._add(map._pathViewport.min);
-
-		pointer.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset);
-
-		this._pathZooming = true;
-
-		this._pointer.setLatLngs([handleLatLng, midpoint]);
-	},
-
-	_initPointerAnimation: function(newCoords) {
-		var map = this._handled._map,
-			newPolyline = new L.Polyline(newCoords).addTo(map),
-			newPath;
-
-		this._pointerAnimation = document.createElementNS(L.Path.SVG_NS, 'animate');
-
-		newPolyline._updatePath();
-
-		newPath = newPolyline.getPathString();
-
-		this._pointerAnimation.setAttribute("attributeName", "d");
-		this._pointerAnimation.setAttribute("dur", "0.25s");
-		this._pointerAnimation.setAttribute("values", this._pointer.getPathString() + "; " + newPath + ";");
-
-		map.removeLayer(newPolyline);
-
-		this._pointer._path.appendChild(this._pointerAnimation);
-	},
-
-	_disableDefaultZoom: function() {
-
-	},
-
-	_enableDefaultZoom: function() {
-
-	},
-
-	_bindListeners: function() {
-		L.Illustrate.EditHandle.prototype._bindListeners.call(this);
-		this._handled._map
-			.on('zoomanim', this._animatePointerOnZoom, this)
-			.on('zoomend', this._updatePointer, this);
 	}
 });
 

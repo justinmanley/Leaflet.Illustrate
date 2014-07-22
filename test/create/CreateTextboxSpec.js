@@ -1,27 +1,28 @@
 var expect = chai.expect;
 
 describe("L.Illustrate.Create.Textbox", function() {
-	var map, create;
+	var map;
 
 	describe("_setShapeOptions", function() {
 		it("Should set defaults correctly.", function() {
-			create = new L.Illustrate.Create.Textbox(map, {});
+			var create = new L.Illustrate.Create.Textbox(map, {}),
+				color = create.options.textOptions.borderColor,
+				weight = create.options.textOptions.borderWidth;
 
 			/* Defaults from L.Illustrate.Create.Textbox */
-			expect(create.options.shapeOptions.opacity).to.equal(0);
+			expect(create.options.shapeOptions.opacity).to.equal(1);
 			expect(create.options.shapeOptions.fill).to.equal(false);
 
-			expect(create.options.shapeOptions.color).to.equal('#4387fd');
-			expect(create.options.shapeOptions.weight).to.equal(2);
+			expect(create.options.shapeOptions.color).to.equal(color);
+			expect(create.options.shapeOptions.weight).to.equal(weight);
 		});
 
 		it("Should handle options parameter correctly.", function() {
-			var options = { borderWidth: 4, borderColor: "#9840ae" };
-
-			create = new L.Illustrate.Create.Textbox(map, options);
+			var options = { borderWidth: 4, borderColor: "#9840ae" },
+				create = new L.Illustrate.Create.Textbox(map, options);
 
 			/* Defaults from L.Illustrate.Create.Textbox */
-			expect(create.options.shapeOptions.opacity).to.equal(0);
+			expect(create.options.shapeOptions.opacity).to.equal(1);
 			expect(create.options.shapeOptions.fill).to.equal(false);
 
 			/* Set dynamically from the options that were passed in. */

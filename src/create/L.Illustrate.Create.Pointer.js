@@ -13,7 +13,7 @@ L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
 		}
 
-		pointer = new L.Illustrate.Pointer(coordinates, latlngs[0], this.options.shapeOptions);
+		pointer = new L.Illustrate.Pointer(latlngs[0], coordinates, this.options.shapeOptions);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
 	}
 });

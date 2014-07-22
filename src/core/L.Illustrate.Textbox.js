@@ -75,7 +75,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._latlng = latlng;
 
 		this._updateCenter();
-		this.fire('shape-change');
+		this.fire('update');
 
 		return this;
 	},
@@ -93,7 +93,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._height = size.y;
 
 		this._updateSize();
-		this.fire('shape-change');
+		this.fire('update');
 
 		return this;
 	},
@@ -101,7 +101,7 @@ L.Illustrate.Textbox = L.Class.extend({
 	setRotation: function(theta) {
 		this._textbox.setRotation(theta % (2*Math.PI));
 		this._textbox.update();
-		this.fire('shape-change');
+		this.fire('update');
 		return this;
 	},
 
