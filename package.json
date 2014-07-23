@@ -31,10 +31,11 @@
     "karma-safari-launcher": "^0.1.1",
     "karma-mocha-reporter": "0.2.7",
     "karma-coverage": "0.2.4",
-    "karma-coveralls": "^0.1.0",
 
     "leaflet": "~0.7.0",
-    "leaflet-draw": "0.2.3"
+    "leaflet-draw": "0.2.3",
+
+    "coveralls": "2.11.1"
   },
   "peerDependencies": {
     "grunt-cli": "0.1.13"
@@ -44,6 +45,10 @@
     "distribution": "./dist",
     "source": "./src",
     "tests": "./test"
+  },
+  "scripts": {
+    "test": "grunt test",
+    "coveralls": "cat 'coverage/Chrome 36.0.1985 (Linux)/lcov.info' | coveralls"
   },
   "repository": {
     "type": "git",

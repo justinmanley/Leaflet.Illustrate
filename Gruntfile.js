@@ -1,3 +1,5 @@
+var exec = require('child_process').exec;
+
 module.exports = function(grunt) {
 
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
@@ -142,12 +144,6 @@ module.exports = function(grunt) {
             }
         },
 
-        open: {
-            devserver: {
-                path: 'http://localhost:8888'
-            }
-        },
-
         concat: {
             dist: {
                 options: {
@@ -184,7 +180,7 @@ module.exports = function(grunt) {
         'less'
     ]);
 
-    grunt.registerTask('coverage', "Custom commmand-line reporter for karma-coverage", function() {
+    grunt.registerTask('coverage', 'Custom commmand-line reporter for karma-coverage', function() {
         var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),
             reports = {},
             report, i, len;
