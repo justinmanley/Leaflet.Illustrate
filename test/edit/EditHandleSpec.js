@@ -33,7 +33,7 @@ describe("L.Illustrate.EditHandle", function() {
 			resizeHandle = new L.Illustrate.ResizeHandle(textbox, {
 				offset: new L.Point(-width, -height),
 				corner: 'upper-left'
-			});
+			}).addTo(map);
 		});
 
 		afterEach(function() {

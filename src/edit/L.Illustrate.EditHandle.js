@@ -23,12 +23,16 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
-
-		this._bindListeners();
 	},
 
 	onAdd: function(map) {
 		L.RotatableMarker.prototype.onAdd.call(this, map);
+		this._bindListeners();
+	},
+
+	onRemove: function(map) {
+		this._unbindListeners();
+		L.RotatableMarker.prototype.onRemove.call(this, map);
 	},
 
 	_animateZoom: function(opt) {
@@ -43,9 +47,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	updateHandle: function() {
 		var rotation = this._handled.getRotation(),
-			latlng = this._handled._map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset)
-			);
+			latlng = this._textboxCoordsToLatLng(this._handleOffset);
 
 		this.setRotation(rotation);
 		this.setLatLng(latlng);
@@ -65,13 +67,25 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_bindListeners: function() {
-		this
-			.on('dragstart', this._onHandleDragStart, this)
-			.on('drag', this._onHandleDrag, this)
-			.on('dragend', this._onHandleDragEnd, this);
+		this.on({
+			'dragstart': this._onHandleDragStart,
+			'drag': this._onHandleDrag,
+			'dragend': this._onHandleDragEnd
+		}, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
 		this._handled.on('update', this.updateHandle, this);
+	},
+
+	_unbindListeners: function() {
+		this.off({
+			'dragstart': this._onHandleDragStart,
+			'drag': this._onHandleDrag,
+			'dragend': this._onHandleDragEnd
+		}, this);
+
+		this._handled._map.off('zoomend', this.updateHandle, this);
+		this._handled.off('update', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {

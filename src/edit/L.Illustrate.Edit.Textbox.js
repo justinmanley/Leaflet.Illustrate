@@ -2,29 +2,44 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
-		L.Edit.SimpleShape.prototype.addHooks.call(this);
+		if (this._shape._map) {
+			this._map = this._shape._map;
 
-		this._addRotateHandle();
-		this._addResizeHandles();
-		this._addMoveHandle();
+			this._initHandles();
+		}
 	},
 
 	removeHooks: function() {
-		L.Edit.SimpleShape.prototype.removeHooks.call(this);
+		if (this._shape._map) {
+			this._map.removeLayer(this._handles);
+			delete this._handles;
+		}
+	},
+
+	_initHandles: function() {
+		if (!this._handles) {
+
+			this._handles = new L.LayerGroup();
+			this._map.addLayer(this._handles);
+
+			this._addRotateHandle();
+			this._addResizeHandles();
+			this._addMoveHandle();
+		}
 	},
 
 	_addRotateHandle: function() {
 		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
 			offset: new L.Point(0, -this._shape.getSize().y)
 		});
-		this._markerGroup.addLayer(this._rotateHandle);
+		this._handles.addLayer(this._rotateHandle);
 	},
 
 	_addMoveHandle: function() {
 		this._moveHandle = new L.Illustrate.MoveHandle(this._shape, {
 			offset: new L.Point(0,0)
 		});
-		this._markerGroup.addLayer(this._moveHandle);
+		this._handles.addLayer(this._moveHandle);
 	},
 
 	_addResizeHandles: function() {
@@ -51,7 +66,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 		this._resizeHandles = [ upperLeft, upperRight, lowerLeft, lowerRight ];
 
 		for (var i = 0; i < this._resizeHandles.length; i++) {
-			this._markerGroup.addLayer(this._resizeHandles[i]);
+			this._handles.addLayer(this._resizeHandles[i]);
 		}
 	}
 });

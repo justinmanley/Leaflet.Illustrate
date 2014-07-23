@@ -107,6 +107,19 @@ L.Illustrate.Pointer = L.Path.extend({
 		}, this);
 	},
 
+	onRemove: function(map) {
+		this._unbindPathRoot();
+		this._pathRoot.parentNode.removeChild(this._pathRoot);
+
+		map.off({
+			'viewreset': this._updatePath,
+			'moveend': this._updatePath
+		}, this);
+
+		this.fire('remove');
+
+		this._map = null;
+	},
 
 	getLatLng: function() {
 		return this._latlng;
@@ -203,9 +216,6 @@ L.Illustrate.Pointer = L.Path.extend({
 		this._clipPoints();
 
 		L.Path.prototype._updatePath.call(this);
-
-		this._projectCoordinatesToLayerPoints();
-
 	}
 });
 L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
@@ -249,6 +259,14 @@ L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
 
 		this._map.on('moveend', this._updateSvgViewport, this);
 		this._updateSvgViewport();
+	},
+
+	_unbindPathRoot: function() {
+		this._map.off({
+			'zoomanim': this._animateZoom,
+			'zoomend': this._endZoom,
+			'moveend': this._updateSvgViewport
+		}, this);
 	},
 
 	_getPanePos: function() {
@@ -727,31 +745,100 @@ L.Illustrate.tooltipText = {
 };
 L.Illustrate.Edit = L.Illustrate.Edit || {};
 
-L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
-	addHooks: function() {
-		L.Edit.SimpleShape.prototype.addHooks.call(this);
+L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
+	initialize: function(shape, options) {
+		L.Edit.Poly.prototype.initialize.call(this, shape, options);
+		this._shape = shape;
+	},
 
-		this._addRotateHandle();
-		this._addResizeHandles();
-		this._addMoveHandle();
+	addHooks: function() {
+		if (this._shape._map) {
+			this._map = this._shape._map;
+
+			this._initHandles();
+		}
 	},
 
 	removeHooks: function() {
-		L.Edit.SimpleShape.prototype.removeHooks.call(this);
+		if (this._shape._map) {
+			this._map.removeLayer(this._handles);
+			delete this._handles;
+		}
+	},
+
+	_initHandles: function() {
+		if (!this._handles) {
+			var coordinates = this._shape.getPoints(),
+				length = coordinates.length,
+				i;
+
+			/* Pointers are not rotatable, but EditHandles expect rotatable objects. */
+			this._shape.getRotation = function() { return 0; };
+
+			this._handles = new L.LayerGroup();
+			this._map.addLayer(this._handles);
+
+			for (i = 0; i < length; i++) {
+				this._handles[i] = new L.Illustrate.PointerHandle(this._shape, {
+					offset: coordinates[i],
+					index: i
+				}).addTo(this._map);
+			}
+		}
+	}
+});
+
+L.Illustrate.Pointer.addInitHook(function() {
+	if (L.Illustrate.Edit.Pointer) {
+		this.editing = new L.Illustrate.Edit.Pointer(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+});
+L.Illustrate.Edit = L.Illustrate.Edit || {};
+
+L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
+	addHooks: function() {
+		if (this._shape._map) {
+			this._map = this._shape._map;
+
+			this._initHandles();
+		}
+	},
+
+	removeHooks: function() {
+		if (this._shape._map) {
+			this._map.removeLayer(this._handles);
+			delete this._handles;
+		}
+	},
+
+	_initHandles: function() {
+		if (!this._handles) {
+
+			this._handles = new L.LayerGroup();
+			this._map.addLayer(this._handles);
+
+			this._addRotateHandle();
+			this._addResizeHandles();
+			this._addMoveHandle();
+		}
 	},
 
 	_addRotateHandle: function() {
 		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
 			offset: new L.Point(0, -this._shape.getSize().y)
 		});
-		this._markerGroup.addLayer(this._rotateHandle);
+		this._handles.addLayer(this._rotateHandle);
 	},
 
 	_addMoveHandle: function() {
 		this._moveHandle = new L.Illustrate.MoveHandle(this._shape, {
 			offset: new L.Point(0,0)
 		});
-		this._markerGroup.addLayer(this._moveHandle);
+		this._handles.addLayer(this._moveHandle);
 	},
 
 	_addResizeHandles: function() {
@@ -778,7 +865,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 		this._resizeHandles = [ upperLeft, upperRight, lowerLeft, lowerRight ];
 
 		for (var i = 0; i < this._resizeHandles.length; i++) {
-			this._markerGroup.addLayer(this._resizeHandles[i]);
+			this._handles.addLayer(this._resizeHandles[i]);
 		}
 	}
 });
@@ -817,12 +904,16 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 			icon: this.options.resizeIcon,
 			zIndexOffset: 10
 		});
-
-		this._bindListeners();
 	},
 
 	onAdd: function(map) {
 		L.RotatableMarker.prototype.onAdd.call(this, map);
+		this._bindListeners();
+	},
+
+	onRemove: function(map) {
+		this._unbindListeners();
+		L.RotatableMarker.prototype.onRemove.call(this, map);
 	},
 
 	_animateZoom: function(opt) {
@@ -837,9 +928,7 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 
 	updateHandle: function() {
 		var rotation = this._handled.getRotation(),
-			latlng = this._handled._map.layerPointToLatLng(
-				this._textboxCoordsToLayerPoint(this._handleOffset)
-			);
+			latlng = this._textboxCoordsToLatLng(this._handleOffset);
 
 		this.setRotation(rotation);
 		this.setLatLng(latlng);
@@ -859,13 +948,25 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_bindListeners: function() {
-		this
-			.on('dragstart', this._onHandleDragStart, this)
-			.on('drag', this._onHandleDrag, this)
-			.on('dragend', this._onHandleDragEnd, this);
+		this.on({
+			'dragstart': this._onHandleDragStart,
+			'drag': this._onHandleDrag,
+			'dragend': this._onHandleDragEnd
+		}, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
 		this._handled.on('update', this.updateHandle, this);
+	},
+
+	_unbindListeners: function() {
+		this.off({
+			'dragstart': this._onHandleDragStart,
+			'drag': this._onHandleDrag,
+			'dragend': this._onHandleDragEnd
+		}, this);
+
+		this._handled._map.off('zoomend', this.updateHandle, this);
+		this._handled.off('update', this.updateHandle, this);
 	},
 
 	_calculateRotation: function(point, theta) {
@@ -947,6 +1048,22 @@ L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 		this._handled.setCenter(handle.getLatLng());
 
 		this._handled.fire('illustrate:handledrag');
+	}
+});
+L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
+	initialize: function(shape, options) {
+		L.Illustrate.EditHandle.prototype.initialize.call(this, shape, options);
+		this._index = options.index;
+	},
+
+	_onHandleDrag: function(event) {
+		var handle = event.target,
+			coordinates = this._handled.getPoints();
+
+		this._handleOffset = this._latLngToTextboxCoords(handle.getLatLng());
+		coordinates.splice(this._index, 1, this._handleOffset);
+
+		this._handled.setPoints(coordinates);
 	}
 });
 L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({

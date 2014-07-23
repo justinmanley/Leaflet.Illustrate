@@ -115,7 +115,8 @@ module.exports = function(grunt) {
         karma: {
             continuous: {
                 configFile: 'test/karma.conf.js',
-                background: true
+                background: true,
+                colors: true
             },
             unit: {
                 configFile: 'test/karma.conf.js',

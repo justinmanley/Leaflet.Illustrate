@@ -41,6 +41,14 @@ L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
 		this._updateSvgViewport();
 	},
 
+	_unbindPathRoot: function() {
+		this._map.off({
+			'zoomanim': this._animateZoom,
+			'zoomend': this._endZoom,
+			'moveend': this._updateSvgViewport
+		}, this);
+	},
+
 	_getPanePos: function() {
 		return L.DomUtil.getPosition(this._pathRoot);
 	},

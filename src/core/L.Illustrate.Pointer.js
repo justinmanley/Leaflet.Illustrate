@@ -32,6 +32,20 @@ L.Illustrate.Pointer = L.Path.extend({
 		}, this);
 	},
 
+	onRemove: function(map) {
+		this._unbindPathRoot();
+		this._pathRoot.parentNode.removeChild(this._pathRoot);
+
+		map.off({
+			'viewreset': this._updatePath,
+			'moveend': this._updatePath
+		}, this);
+
+		this.fire('remove');
+
+		this._map = null;
+	},
+
 	getLatLng: function() {
 		return this._latlng;
 	},
@@ -127,8 +141,5 @@ L.Illustrate.Pointer = L.Path.extend({
 		this._clipPoints();
 
 		L.Path.prototype._updatePath.call(this);
-
-		this._projectCoordinatesToLayerPoints();
-
 	}
 });

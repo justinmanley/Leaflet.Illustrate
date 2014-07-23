@@ -72,4 +72,22 @@ describe("L.Illustrate.Pointer", function() {
 			});
 		});
 	});
+
+	describe("#onRemove", function() {
+		it("Should remove all SVG elements and map listeners.", function() {
+			var _updateSvgViewport = sinon.spy(L.Illustrate.Pointer.prototype, "_updateSvgViewport"),
+				anchor = new L.LatLng(41.7918, -87.6010),
+				pointer = new L.Illustrate.Pointer(anchor, [
+					new L.Point(0, 0),
+					new L.Point(0, 400)
+				]).addTo(map);
+
+			_updateSvgViewport.reset();
+			map.removeLayer(pointer);
+
+			map.setView(new L.LatLng(41.8, -87.7), map.getZoom() + 1);
+
+			expect(_updateSvgViewport.called).to.equal(false);
+		});
+	});
 });
