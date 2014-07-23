@@ -134,6 +134,7 @@ module.exports = function(grunt) {
                     'src/extends-leaflet/*.js',
                     'src/*.js',
                     'src/*/*.js',
+                    'src/*/*/*.js',
                     'src/Leaflet.Illustrate.less',
                     'test/*.js',
                     'test/*/*Spec.js',
@@ -158,6 +159,7 @@ module.exports = function(grunt) {
                     'src/create/L.Illustrate.Create.js',
                     'src/create/L.Illustrate.Create.*.js',
                     'src/L.Illustrate.*.js',
+                    'src/edit/*/*.js',
                     'src/edit/*.js'
                 ],
                 dest: 'dist/Leaflet.Illustrate.js',

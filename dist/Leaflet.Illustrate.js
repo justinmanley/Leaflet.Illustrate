@@ -743,142 +743,6 @@ L.Illustrate.tooltipText = {
 		}
 	}
 };
-L.Illustrate.Edit = L.Illustrate.Edit || {};
-
-L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
-	initialize: function(shape, options) {
-		L.Edit.Poly.prototype.initialize.call(this, shape, options);
-		this._shape = shape;
-	},
-
-	addHooks: function() {
-		if (this._shape._map) {
-			this._map = this._shape._map;
-
-			this._initHandles();
-		}
-	},
-
-	removeHooks: function() {
-		if (this._shape._map) {
-			this._map.removeLayer(this._handles);
-			delete this._handles;
-		}
-	},
-
-	_initHandles: function() {
-		if (!this._handles) {
-			var coordinates = this._shape.getPoints(),
-				length = coordinates.length,
-				i;
-
-			/* Pointers are not rotatable, but EditHandles expect rotatable objects. */
-			this._shape.getRotation = function() { return 0; };
-
-			this._handles = new L.LayerGroup();
-			this._map.addLayer(this._handles);
-
-			for (i = 0; i < length; i++) {
-				this._handles[i] = new L.Illustrate.PointerHandle(this._shape, {
-					offset: coordinates[i],
-					index: i
-				}).addTo(this._map);
-			}
-		}
-	}
-});
-
-L.Illustrate.Pointer.addInitHook(function() {
-	if (L.Illustrate.Edit.Pointer) {
-		this.editing = new L.Illustrate.Edit.Pointer(this);
-
-		if (this.options.editable) {
-			this.editing.enable();
-		}
-	}
-});
-L.Illustrate.Edit = L.Illustrate.Edit || {};
-
-L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
-	addHooks: function() {
-		if (this._shape._map) {
-			this._map = this._shape._map;
-
-			this._initHandles();
-		}
-	},
-
-	removeHooks: function() {
-		if (this._shape._map) {
-			this._map.removeLayer(this._handles);
-			delete this._handles;
-		}
-	},
-
-	_initHandles: function() {
-		if (!this._handles) {
-
-			this._handles = new L.LayerGroup();
-			this._map.addLayer(this._handles);
-
-			this._addRotateHandle();
-			this._addResizeHandles();
-			this._addMoveHandle();
-		}
-	},
-
-	_addRotateHandle: function() {
-		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
-			offset: new L.Point(0, -this._shape.getSize().y)
-		});
-		this._handles.addLayer(this._rotateHandle);
-	},
-
-	_addMoveHandle: function() {
-		this._moveHandle = new L.Illustrate.MoveHandle(this._shape, {
-			offset: new L.Point(0,0)
-		});
-		this._handles.addLayer(this._moveHandle);
-	},
-
-	_addResizeHandles: function() {
-		var size = this._shape.getSize(),
-			height = Math.round(size.y/2),
-			width = Math.round(size.x/2),
-			upperLeft = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(-width, -height),
-				corner: 'upper-left'
-			}),
-			upperRight = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(width, -height),
-				corner: 'upper-right'
-			}),
-			lowerLeft = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(-width, height),
-				corner: 'lower-left'
-			}),
-			lowerRight = new L.Illustrate.ResizeHandle(this._shape, {
-				offset: new L.Point(width, height),
-				corner: 'lower-right'
-			});
-
-		this._resizeHandles = [ upperLeft, upperRight, lowerLeft, lowerRight ];
-
-		for (var i = 0; i < this._resizeHandles.length; i++) {
-			this._handles.addLayer(this._resizeHandles[i]);
-		}
-	}
-});
-
-L.Illustrate.Textbox.addInitHook(function() {
-	if (L.Illustrate.Edit.Textbox) {
-		this.editing = new L.Illustrate.Edit.Textbox(this);
-
-		if (this.options.editable) {
-			this.editing.enable();
-		}
-	}
-});
 L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	options: {
 		moveIcon: new L.DivIcon({
@@ -1183,6 +1047,142 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 			this._textboxCoordsToLayerPoint(this._pointerStart).subtract(origin),
 			this._textboxCoordsToLayerPoint(this._handleOffset).subtract(origin)
 		]);
+	}
+});
+L.Illustrate.Edit = L.Illustrate.Edit || {};
+
+L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
+	initialize: function(shape, options) {
+		L.Edit.Poly.prototype.initialize.call(this, shape, options);
+		this._shape = shape;
+	},
+
+	addHooks: function() {
+		if (this._shape._map) {
+			this._map = this._shape._map;
+
+			this._initHandles();
+		}
+	},
+
+	removeHooks: function() {
+		if (this._shape._map) {
+			this._map.removeLayer(this._handles);
+			delete this._handles;
+		}
+	},
+
+	_initHandles: function() {
+		if (!this._handles) {
+			var coordinates = this._shape.getPoints(),
+				length = coordinates.length,
+				i;
+
+			/* Pointers are not rotatable, but EditHandles expect rotatable objects. */
+			this._shape.getRotation = function() { return 0; };
+
+			this._handles = new L.LayerGroup();
+			this._map.addLayer(this._handles);
+
+			for (i = 0; i < length; i++) {
+				this._handles[i] = new L.Illustrate.PointerHandle(this._shape, {
+					offset: coordinates[i],
+					index: i
+				}).addTo(this._map);
+			}
+		}
+	}
+});
+
+L.Illustrate.Pointer.addInitHook(function() {
+	if (L.Illustrate.Edit.Pointer) {
+		this.editing = new L.Illustrate.Edit.Pointer(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+});
+L.Illustrate.Edit = L.Illustrate.Edit || {};
+
+L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
+	addHooks: function() {
+		if (this._shape._map) {
+			this._map = this._shape._map;
+
+			this._initHandles();
+		}
+	},
+
+	removeHooks: function() {
+		if (this._shape._map) {
+			this._map.removeLayer(this._handles);
+			delete this._handles;
+		}
+	},
+
+	_initHandles: function() {
+		if (!this._handles) {
+
+			this._handles = new L.LayerGroup();
+			this._map.addLayer(this._handles);
+
+			this._addRotateHandle();
+			this._addResizeHandles();
+			this._addMoveHandle();
+		}
+	},
+
+	_addRotateHandle: function() {
+		this._rotateHandle = new L.Illustrate.RotateHandle(this._shape, {
+			offset: new L.Point(0, -this._shape.getSize().y)
+		});
+		this._handles.addLayer(this._rotateHandle);
+	},
+
+	_addMoveHandle: function() {
+		this._moveHandle = new L.Illustrate.MoveHandle(this._shape, {
+			offset: new L.Point(0,0)
+		});
+		this._handles.addLayer(this._moveHandle);
+	},
+
+	_addResizeHandles: function() {
+		var size = this._shape.getSize(),
+			height = Math.round(size.y/2),
+			width = Math.round(size.x/2),
+			upperLeft = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(-width, -height),
+				corner: 'upper-left'
+			}),
+			upperRight = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(width, -height),
+				corner: 'upper-right'
+			}),
+			lowerLeft = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(-width, height),
+				corner: 'lower-left'
+			}),
+			lowerRight = new L.Illustrate.ResizeHandle(this._shape, {
+				offset: new L.Point(width, height),
+				corner: 'lower-right'
+			});
+
+		this._resizeHandles = [ upperLeft, upperRight, lowerLeft, lowerRight ];
+
+		for (var i = 0; i < this._resizeHandles.length; i++) {
+			this._handles.addLayer(this._resizeHandles[i]);
+		}
+	}
+});
+
+L.Illustrate.Textbox.addInitHook(function() {
+	if (L.Illustrate.Edit.Textbox) {
+		this.editing = new L.Illustrate.Edit.Textbox(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
 	}
 });
 

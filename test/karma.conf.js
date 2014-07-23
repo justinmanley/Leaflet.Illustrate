@@ -30,8 +30,10 @@ module.exports = function(config) {
       '../src/create/L.Illustrate.Create.js',
       '../src/create/L.Illustrate.Create.*.js',
       '../src/L.Illustrate.*.js',
+      '../src/edit/*/*.js',
       '../src/edit/*.js',
-      '../test/*/*Spec.js'
+      '../test/*/*Spec.js',
+      '../test/*/*/*Spec.js'
     ],
 
 
@@ -45,7 +47,8 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       '../src/*.js': 'coverage',
-      '../src/*/*.js': 'coverage'
+      '../src/*/*.js': 'coverage',
+      '../src/*/*/*.js': 'coverage'
     },
 
 
