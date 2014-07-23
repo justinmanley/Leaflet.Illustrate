@@ -1,5 +1,3 @@
-var exec = require('child_process').exec;
-
 module.exports = function(grunt) {
 
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
