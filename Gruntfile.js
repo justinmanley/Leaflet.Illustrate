@@ -165,7 +165,7 @@ module.exports = function(grunt) {
     });
 
     /* Run tests once. */
-    grunt.registerTask('test', ['jshint:test', 'karma:unit', 'coverage' ]);
+    grunt.registerTask('test', ['jshint', 'karma:unit', 'coverage' ]);
 
     /* Default (development): Watch files and lint, test, and build on change. */
     grunt.registerTask('default', ['karma:continuous:start', 'watch:source']);

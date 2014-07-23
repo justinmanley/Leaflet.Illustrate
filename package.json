@@ -47,7 +47,7 @@
     "tests": "./test"
   },
   "scripts": {
-    "test": "grunt test",
+    "test": "grunt test --verbose",
     "coveralls": "cat 'coverage/Chrome 36.0.1985 (Linux)/lcov.info' | coveralls"
   },
   "repository": {
