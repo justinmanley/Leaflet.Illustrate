@@ -32,7 +32,6 @@ L.Illustrate.Pointer = L.Path.extend({
 		}, this);
 	},
 
-
 	getLatLng: function() {
 		return this._latlng;
 	},
