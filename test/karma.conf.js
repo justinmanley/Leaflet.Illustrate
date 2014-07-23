@@ -52,7 +52,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: [ 'mocha', 'coverage', 'coveralls' ],
+    reporters: [ 'mocha', 'coverage' ],
 
 
     // web server port
@@ -81,8 +81,7 @@ module.exports = function(config) {
       'karma-firefox-launcher',
       'karma-safari-launcher',
       'karma-mocha-reporter',
-      'karma-coverage',
-      'karma-coveralls'
+      'karma-coverage'
     ],
 
     // Continuous Integration mode
