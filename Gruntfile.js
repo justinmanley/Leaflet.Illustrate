@@ -1,4 +1,5 @@
 module.exports = function(grunt) {
+    var exec = require('child_process').exec;
 
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
@@ -20,36 +21,6 @@ module.exports = function(grunt) {
                 push: true,
                 pushTo: 'origin',
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d'
-            }
-        },
-
-        connect: {
-            options: {
-                base: ''
-            },
-            webserver: {
-                options: {
-                    port: 8888,
-                    keepalive: true
-                }
-            },
-            devserver: {
-                options: {
-                    port: 8888
-                }
-            },
-            testserver: {
-                options: {
-                    port: 9999
-                }
-            },
-            coverage: {
-                options: {
-                    base: 'coverage/',
-                    directory: 'coverage/',
-                    port: 5555,
-                    keepalive: true
-                }
             }
         },
 
@@ -129,6 +100,10 @@ module.exports = function(grunt) {
             options : {
                 livereload: 7777
             },
+            packages: {
+                files: [ 'package.json' ],
+                tasks: [ 'install-dependencies' ]
+            },
             source: {
                 files: [
                     'src/extends-leaflet/*.js',
@@ -180,6 +155,16 @@ module.exports = function(grunt) {
         'concat:dist',
         'less'
     ]);
+
+    grunt.registerTask('install-dependencies', function() {
+        var done = this.async();
+
+        exec('npm install', function(err, stdout, stderr) {
+            console.log(stdout);
+            console.log(stderr);
+            done();
+        });
+    });
 
     grunt.registerTask('coverage', 'Custom commmand-line reporter for karma-coverage', function() {
         var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),
