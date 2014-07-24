@@ -3,6 +3,7 @@ Leaflet.Illustrate
 
 [![Build Status](https://travis-ci.org/manleyjster/Leaflet.Illustrate.svg?branch=master)](https://travis-ci.org/manleyjster/Leaflet.Illustrate)
 [![Coverage Status](https://img.shields.io/coveralls/manleyjster/Leaflet.Illustrate.svg)](https://coveralls.io/r/manleyjster/Leaflet.Illustrate)
+[![NPM Version](http://img.shields.io/npm/v/leaflet-illustrate.svg)](https://www.npmjs.org/package/leaflet-illustrate)
 
 Rich annotation plugin (drawing, text, and more) for Leaflet extending Leaflet.draw.  Designed to help people tell the story behind the maps that they create.
 
