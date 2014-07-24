@@ -128,89 +128,61 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_enableTyping: function() {
-		// var textarea = this._textbox._icon.children[0];
+		var textarea = this._textbox._icon.children[0];
 
-		// L.DomEvent.on(textarea, 'mousemove', function() {
-		// 	console.log('mousemove');
-		// });
+		this._selecting = new L.Illustrate.Selectable(textarea);
 
-		// var map = this._map,
-			// textarea = this._textbox._icon.children[0],
-			// mapDraggable;
-
-		L.DomEvent.off(window, 'drag', L.DomEvent.preventDefault);
-		L.DomEvent.off(window, 'dragstart', L.DomEvent.preventDefault);
-
-		this._textbox.on('drag', function() {
-			console.log('drag');
-		});
-
-		L.DomEvent.on(this._textbox._icon.children[0], 'dblclick', function(event) {
+		L.DomEvent.on(textarea, 'click', function(event) {
 			event.target.focus();
 			this._map.dragging.disable();
+			this._selecting.enable();
 		}, this);
 
-		L.DomEvent.on(this._textbox._icon.children[0], 'mouseout', function() {
+		L.DomEvent.on(textarea, 'mouseout', function() {
 			this._map.dragging.enable();
+			this._selecting.disable();
 		}, this);
-
-		// L.DomEvent.on(textarea, 'focus', function(event) {
-		// 	// not sure why this doesn't work
-		// 	L.DomUtil.enableTextSelection();
-		// 	L.DomEvent.off(event.target, 'selectstart', L.DomEvent.preventDefault);
-
-		// 	L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-outlined');
-		// 	L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-hidden');
-
-		// 	mapDraggable = map.dragging.enabled();
-		// 	if (mapDraggable) {
-		// 		map.dragging.disable();
-		// 	}
-		// });
-
-		// L.DomEvent.on(textarea, 'blur', function(event) {
-		// 	// not sure why this doesn't work
-		// 	L.DomUtil.disableTextSelection();
-		// 	L.DomEvent.on(event.target, 'selectstart', L.DomEvent.preventDefault);
-
-		// 	L.DomUtil.addClass(event.target, 'leaflet-illustrate-textbox-hidden');
-		// 	L.DomUtil.removeClass(event.target, 'leaflet-illustrate-textbox-outlined');
-
-		// 	mapDraggable = map.dragging.enabled();
-		// 	if (!mapDraggable) {
-		// 		map.dragging.enable();
-		// 	}
-		// });
 	}
 });
 
-// L.Illustrate.Textbox.Select = L.Handler.extend({
-// 	addHooks: function() {
-// 		if (!this._selectable) {
-// 			this._selectable = new L.Draggable(this._map._textbox._icon.children[0]);
+L.Illustrate.Selectable = L.Handler.extend({
 
-// 			this._selectable.on({
-// 				'dragstart': this._onDragStart,
-// 				'dragend': this._onDragEnd,
-// 				'drag': this._onDrag
-// 			});
-// 		}
-// 		this._selectable.enable();
-// 	},
+	includes: L.Mixin.Events,
 
-// 	removeHooks: function() {
-// 		this._selectable.disable();
-// 	},
+	statics: {
+		START: L.Draggable.START,
+		END: L.Draggable.END,
+		MOVE: L.Draggable.MOVE
+	},
 
-// 	_onDragStart: function() {
-// 		console.log('LOG dragstart');
-// 	},
+	initialize: function(element, selectStartTarget) {
+		this._element = element;
+		this._selectStartTarget = selectStartTarget || element;
+	},
 
-// 	_onDrag: function() {
-// 		console.log('LOG drag');
-// 	},
+	addHooks: function() {
+		var start = L.Illustrate.Selectable.START;
+		L.DomEvent.on(this._selectStartTarget, start.join(' '), this._onDown, this);
+	},
 
-// 	_onDragEnd: function() {
-// 		console.log('LOG dragend');
-// 	}
-// });
+	removeHooks: function() {
+		var start = L.Illustrate.Selectable.START;
+		L.DomEvent.off(this._selectStartTarget, start.join(' '), this._onDown, this);
+	},
+
+	_onDown: function(event) {
+		L.DomEvent.stopPropagation(event);
+
+		L.DomEvent
+			.on(this._selectStartTarget, L.Illustrate.Selectable.MOVE[event.type], this._onMove, this)
+			.on(this._selectStartTarget, L.Illustrate.Selectable.END[event.type], this._onUp, this);
+	},
+
+	_onMove: function(event) {
+		L.DomEvent.stopPropagation(event);
+	},
+
+	_onUp: function(event) {
+		L.DomEvent.stopPropagation(event);
+	}
+});
