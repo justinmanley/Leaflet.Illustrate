@@ -30,16 +30,45 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 			/* Pointers are not rotatable, but EditHandles expect rotatable objects. */
 			this._shape.getRotation = function() { return 0; };
 
-			this._handles = new L.LayerGroup();
-			this._map.addLayer(this._handles);
+			this._handleGroup = new L.FeatureGroup();
+			this._map.addLayer(this._handleGroup);
+
+			this._handles = { vertex: [], midpoint: [] };
 
 			for (i = 0; i < length; i++) {
-				this._handles[i] = new L.Illustrate.PointerHandle(this._shape, {
-					offset: coordinates[i],
-					index: i
-				}).addTo(this._map);
+				this._createVertexHandle(i);
+			}
+
+			for (i = 0; i < length - 1; i++) {
+				this._createMidpointHandle(i);
 			}
 		}
+	},
+
+	_createVertexHandle: function(index) {
+		var coordinates = this._shape.getPoints(),
+			vertexHandle = new L.Illustrate.PointerHandle(this._shape, {
+				offset: coordinates[index],
+				index: index,
+				type: 'vertex'
+			});
+
+		this._handleGroup.addLayer(vertexHandle);
+		this._handles.vertex[index] = vertexHandle;
+	},
+
+	_createMidpointHandle: function(index) {
+		var coordinates = this._shape.getPoints(),
+			delta = coordinates[index+1].subtract(coordinates[index]).divideBy(2),
+			midpointHandle = new L.Illustrate.PointerHandle(this._shape, {
+				offset: coordinates[index].add(delta),
+				index: index,
+				type: 'midpoint'
+			});
+
+		midpointHandle.setOpacity(0.6);
+		this._handleGroup.addLayer(midpointHandle);
+		this._handles.midpoint[index] = midpointHandle;
 	}
 });
 
