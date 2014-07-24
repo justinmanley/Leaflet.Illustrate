@@ -1,5 +1,4 @@
 module.exports = function(grunt) {
-    var exec = require('child_process').exec;
 
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
@@ -58,7 +57,7 @@ module.exports = function(grunt) {
                 }
             },
             source: {
-                src: [ 'src/*.js', 'src/*/*.js', 'Gruntfile.js', 'package.json' ]
+                src: [ 'src/*.js', 'src/*/*.js', 'src/*/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
             test: {
                 src: [ 'test/*/*Spec.js' ],
@@ -84,10 +83,15 @@ module.exports = function(grunt) {
         },
 
         karma: {
-            continuous: {
+            travis: {
                 configFile: 'test/karma.conf.js',
-                background: true,
-                colors: true
+                background: false,
+                singleRun: true,
+                browsers: [ 'PhantomJS' ]
+            },
+            development: {
+                configFile: 'test/karma.conf.js',
+                background: true
             },
             unit: {
                 configFile: 'test/karma.conf.js',
@@ -99,10 +103,6 @@ module.exports = function(grunt) {
         watch: {
             options : {
                 livereload: 7777
-            },
-            packages: {
-                files: [ 'package.json' ],
-                tasks: [ 'install-dependencies' ]
             },
             source: {
                 files: [
@@ -142,29 +142,22 @@ module.exports = function(grunt) {
         }
     });
 
+    /* Run tests for Travis CI. */
+    grunt.registerTask('travis', [ 'jshint', 'karma:travis', 'coverage' ]);
+
     /* Run tests once. */
-    grunt.registerTask('test', ['jshint', 'karma:unit', 'coverage' ]);
+    grunt.registerTask('test', [ 'jshint', 'karma:test', 'coverage' ]);
 
     /* Default (development): Watch files and lint, test, and build on change. */
-    grunt.registerTask('default', ['karma:continuous:start', 'watch:source']);
+    grunt.registerTask('default', ['karma:development:start', 'watch']);
 
     grunt.registerTask('build', [
         'jshint',
-        'karma:continuous:run',
+        'karma:development:run',
         'coverage',
         'concat:dist',
         'less'
     ]);
-
-    grunt.registerTask('install-dependencies', function() {
-        var done = this.async();
-
-        exec('npm install', function(err, stdout, stderr) {
-            console.log(stdout);
-            console.log(stderr);
-            done();
-        });
-    });
 
     grunt.registerTask('coverage', 'Custom commmand-line reporter for karma-coverage', function() {
         var coverageReports = grunt.file.expand('coverage/*/coverage.txt'),

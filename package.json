@@ -2,6 +2,10 @@
   "name": "leaflet-illustrate",
   "version": "0.0.1",
   "description": "Rich annotation plugin for Leaflet.",
+  "scripts": {
+    "test": "grunt travis",
+    "coveralls": "PHANTOM=`ls ./coverage | grep PhantomJS` && cat \"coverage/$PHANTOM/lcov.info\" | coveralls"
+  },
   "devDependencies": {
     "jshint": "2.5.x",
     "uglify-js": "~2.4.3",
@@ -46,10 +50,6 @@
     "distribution": "./dist",
     "source": "./src",
     "tests": "./test"
-  },
-  "scripts": {
-    "test": "grunt test",
-    "coveralls": "cat 'coverage/PhantomJS 1.9.7 (Linux)/lcov.info' | coveralls"
   },
   "repository": {
     "type": "git",
