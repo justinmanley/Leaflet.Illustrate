@@ -13,8 +13,6 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 			offset = this._latLngToOffset(handle.getLatLng());
 
 		this._handled.setSize(offset.abs().multiplyBy(2));
-
-		this._handled.fire('illustrate:handledrag');
 	},
 
 	updateHandle: function() {

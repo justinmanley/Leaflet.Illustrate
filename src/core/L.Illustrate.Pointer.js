@@ -1,4 +1,5 @@
 L.Illustrate.Pointer = L.Path.extend({
+
 	options: {
 		noClip: false
 	},

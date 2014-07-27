@@ -21,7 +21,7 @@ describe("L.Illustrate.Edit.Pointer", function() {
 
 			editing.enable();
 
-			expect(editing).to.have.property("_handles");
+			expect(editing).to.have.property("_handleGroup");
 		});
 	});
 });

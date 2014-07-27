@@ -34,8 +34,6 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 
 		/* rotate the textbox */
 		this._handled.setRotation(theta);
-
-		this._handled.fire('illustrate:handledrag');
 	},
 
 	updateHandle: function() {

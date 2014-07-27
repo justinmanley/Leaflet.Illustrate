@@ -113,6 +113,7 @@ module.exports = function(grunt) {
                     'src/Leaflet.Illustrate.less',
                     'test/*.js',
                     'test/*/*Spec.js',
+                    'test/*/*/*Spec.js',
                     'Gruntfile.js'
                 ],
                 tasks: [ 'build' ]

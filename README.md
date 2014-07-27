@@ -11,4 +11,4 @@ Created for [MapKnitter](mapknitter.org), a free and open-source tool for stitch
 
 Learn more about MapKnitter at [http://publiclab.org/wiki/mapknitter](http://publiclab.org/wiki/mapknitter).
 
-MapKnitter is open-source software created and run by the [Public Lab for Open Technology and Science](publiclab.org), and this project is part of [Google Summer of Code 2014](https://www.google-melange.com/gsoc/homepage/google/gsoc2014).
+MapKnitter is open-source software created and run by the [Public Lab for Open Technology and Science](publiclab.org), and this project is sponsored by Google as part of [Google Summer of Code 2014](https://www.google-melange.com/gsoc/homepage/google/gsoc2014).

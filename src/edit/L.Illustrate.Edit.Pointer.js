@@ -33,14 +33,14 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 			this._handleGroup = new L.FeatureGroup();
 			this._map.addLayer(this._handleGroup);
 
-			this._handles = { vertex: [], midpoint: [] };
+			this._handles = [];
 
 			for (i = 0; i < length; i++) {
 				this._createVertexHandle(i);
-			}
 
-			for (i = 0; i < length - 1; i++) {
-				this._createMidpointHandle(i);
+				if ( i < length - 1) {
+					this._createMidpointHandle(i);
+				}
 			}
 		}
 	},
@@ -49,26 +49,30 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 		var coordinates = this._shape.getPoints(),
 			vertexHandle = new L.Illustrate.PointerHandle(this._shape, {
 				offset: coordinates[index],
-				index: index,
+				id: 2*index,
 				type: 'vertex'
 			});
 
 		this._handleGroup.addLayer(vertexHandle);
-		this._handles.vertex[index] = vertexHandle;
+		this._handles.push(vertexHandle);
+
+		return vertexHandle;
 	},
 
 	_createMidpointHandle: function(index) {
 		var coordinates = this._shape.getPoints(),
-			delta = coordinates[index+1].subtract(coordinates[index]).divideBy(2),
+			delta = coordinates[index + 1].subtract(coordinates[index]).divideBy(2),
 			midpointHandle = new L.Illustrate.PointerHandle(this._shape, {
 				offset: coordinates[index].add(delta),
-				index: index,
+				id: 2*index + 1,
 				type: 'midpoint'
 			});
 
 		midpointHandle.setOpacity(0.6);
 		this._handleGroup.addLayer(midpointHandle);
-		this._handles.midpoint[index] = midpointHandle;
+		this._handles.push(midpointHandle);
+
+		return midpointHandle;
 	}
 });
 
