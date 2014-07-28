@@ -10,10 +10,11 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 
 		switch(this._type) {
 		case 'vertex':
-			this._handled._updateVertex(this._id, this._handleOffset);
+			this._handled._updateVertex(this);
 			break;
 		case 'midpoint':
-			this._handled._addVertex(this._id, this._handleOffset);
+			this._type = 'vertex';
+			this._handled._addVertex(this);
 			break;
 		}
 	},
@@ -64,8 +65,9 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_onVertexUpdate: function(event) {
-		var id = event.id,
-			i = this._handleIdToCoordIndex(id, 'vertex'),
+		var edit = this._handled.editing,
+			id = event.id,
+			i = edit._handleIdToCoordIndex(id, event.handleType),
 			pointer = this._handled,
 			origin = pointer._map.latLngToLayerPoint(pointer.getLatLng()),
 			midpoint, latlng;
@@ -80,20 +82,6 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 			latlng = pointer._map.layerPointToLatLng(midpoint);
 			this.setLatLng(latlng);
 		}
-	},
-
-	_handleIdToCoordIndex: function(id, type) {
-		var index;
-
-		switch(type) {
-		case 'vertex':
-			index = id/2;
-			break;
-		case 'midpoint':
-			index = (id - 1)/2;
-			break;
-		}
-		return index;
 	}
 });
 
@@ -107,23 +95,33 @@ L.Illustrate.Pointer.include({
 		return v1.add(delta);
 	},
 
-	_removeVertex: function(id) {
-		this._coordinates.splice(id, 1);
+	_removeVertex: function(handle) {
+		this._coordinates.splice(handle._id, 1);
 		this.setPoints(this._coordinates);
-		this.fire('edit:remove-vertex', { id: id });
+		this.fire('edit:remove-vertex', { id: handle._id });
 	},
 
-	_addVertex: function(id, coord) {
-		this._coordinates.splice(id, 0, L.point(coord));
+	_addVertex: function(handle) {
+		var i = this.editing._handleIdToCoordIndex(handle._id, handle._type);
+
+		this._coordinates.splice(i, 0, L.point(handle._handleOffset));
 		this.setPoints(this._coordinates);
-		this.fire('edit:add-vertex', { id: id, coord: coord });
+		this.fire('edit:add-vertex', {
+			id: handle._id,
+			coord: handle._handleOffset,
+			handleType: handle._type
+		});
 	},
 
-	_updateVertex: function(id, coord) {
-		var	i = id/2;
+	_updateVertex: function(handle) {
+		var	i = this.editing._handleIdToCoordIndex(handle._id, handle._type);
 
-		this._coordinates.splice(i, 1, L.point(coord));
+		this._coordinates.splice(i, 1, L.point(handle._handleOffset));
 		this.setPoints(this._coordinates);
-		this.fire('edit:update-vertex', { id: id, coord: coord });
+		this.fire('edit:update-vertex', {
+			id: handle._id,
+			coord: handle._handleOffset,
+			handleType: handle._type
+		});
 	}
 });

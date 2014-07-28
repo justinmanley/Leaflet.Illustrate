@@ -30,7 +30,7 @@ describe("L.Illustrate.PointerHandle", function() {
 	});
 
 	describe("#_onVertexAdd", function() {
-		it("Should add a vertex", function() {
+		it("Should add a vertex.", function() {
 			var initialLength = pointer.getPoints().length,
 				i = 1,
 				handle = editing._handles[i];
@@ -41,10 +41,10 @@ describe("L.Illustrate.PointerHandle", function() {
 
 			expect(pointer.getPoints().length).to.equal(initialLength + 1, "pointer.getPoints().length");
 		});
-	});
 
-	describe("#_onVertexRemove", function() {
+		it("Should add two midpoints handles.", function() {
 
+		});
 	});
 
 	describe("#_onVertexUpdate", function() {
@@ -73,10 +73,6 @@ describe("L.Illustrate.PointerHandle", function() {
 			expect(coordinates[3]).to.be.closeToPoint(initialCoords[3]);
 		});
 
-		it("", function() {
-
-		});
-
 		it("Should set the correct vertex to the correct coordinates", function() {
 			var initialLength = pointer.getPoints().length,
 				handle = editing._handles[2],
@@ -99,7 +95,7 @@ describe("L.Illustrate.PointerHandle", function() {
 			for (var i = 0, length = editing._handles.length; i < length; i++) {
 				h = editing._handles[i];
 				if (h._type === 'vertex') {
-					index = h._handleIdToCoordIndex(h._id, 'vertex'); 
+					index = editing._handleIdToCoordIndex(h._id, 'vertex'); 
 					expect(parseInt(index)).to.equal(index);				
 				}
 			}

@@ -73,6 +73,34 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 		this._handles.push(midpointHandle);
 
 		return midpointHandle;
+	},
+
+	_handleIdToCoordIndex: function(id, type) {
+		var index;
+
+		switch(type) {
+		case 'vertex':
+			index = id/2;
+			break;
+		case 'midpoint':
+			index = (id - 1)/2;
+			break;
+		}
+		return index;
+	},
+
+	_coordIndexToHandleId: function(index, type) {
+		var id;
+
+		switch(type) {
+		case 'vertex':
+			id = index*2;
+			break;
+		case 'midpoint':
+			id = index*2 + 1;
+			break;
+		}
+		return id;
 	}
 });
 
