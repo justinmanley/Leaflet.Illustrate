@@ -60,7 +60,7 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 
 		for (var j = 0, l = removed.length; j < l; j++) {
 			this._handleGroup.removeLayer(removed[j]);
-			removed[j]._unbindListeners();
+			delete removed[j];
 		}
 
 		/* Modify the path and redraw the pointer */
@@ -68,7 +68,7 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 		pointer.setPoints(coordinates);
 
 		pointer.fire('edit:remove-vertex', { 'handle': handle, 'removedId': removedId });
-		
+
 		this._handles.splice(removedId - 1, 0, this._createMidpointHandle(i - 1));
 	},
 
