@@ -101,6 +101,41 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 			break;
 		}
 		return id;
+	},
+
+	_calculateMidpoint: function(i, j) {
+		var	coordinates = this._shape.getPoints(),
+			v1 = coordinates[i],
+			v2 = coordinates[j],
+			delta = v2.subtract(v1).divideBy(2);
+
+		return v1.add(delta);
+	},
+
+	_removeVertex: function(handle) {
+		var pointer = this._shape;
+
+		pointer._coordinates.splice(handle._id, 1);
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:remove-vertex', { id: handle._id });
+	},
+
+	_addVertex: function(handle) {
+		var pointer = this._shape,
+			i = this._handleIdToCoordIndex(handle._id, handle._type);
+
+		pointer._coordinates.splice(i, 0, L.point(handle._handleOffset));
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:add-vertex', { 'handle': handle });
+	},
+
+	_updateVertex: function(handle) {
+		var	pointer = this._shape,
+			i = this._handleIdToCoordIndex(handle._id, handle._type);
+
+		pointer._coordinates.splice(i, 1, L.point(handle._handleOffset));
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:update-vertex', { 'handle': handle });
 	}
 });
 

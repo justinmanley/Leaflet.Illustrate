@@ -54,15 +54,21 @@ describe("L.Illustrate.PointerHandle", function() {
 				handle1 = editing._handles[2],
 				handle2 = editing._handles[4],
 				newCoords = new L.Point(0, 30),
-				coordinates;
+				coordinates, arg;
 
 			handle2.setLatLng(handle2._textboxCoordsToLatLng(newCoords));
 			handle2.fire('drag', { target: handle2 });
 
 			expect(pointer.getPoints().length).to.equal(initialLength);
+
+			expect(_onVertexUpdate.called).to.equal(true);
+
 			for (var i = 0, length = _onVertexUpdate.args.length; i < length; i++) {
-				expect(_onVertexUpdate.args[i][0].id).to.equal(handle2._id);
-				expect(_onVertexUpdate.args[i][0].coord).to.equal(handle2._handleOffset);
+				arg = _onVertexUpdate.args[i][0];
+
+				expect(arg.handle._id).to.equal(handle2._id);
+				expect(arg.handle._handleOffset).to.equal(handle2._handleOffset);
+				expect(arg.handle._type).to.equal(handle2._type);
 			}
 
 			coordinates = pointer.getPoints();

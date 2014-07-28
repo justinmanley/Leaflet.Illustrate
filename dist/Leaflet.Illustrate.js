@@ -893,15 +893,16 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_onHandleDrag: function() {
+		var edit = this._handled.editing;
+
 		this._handleOffset = this._latLngToTextboxCoords(this.getLatLng());
 
 		switch(this._type) {
 		case 'vertex':
-			this._handled._updateVertex(this);
+			edit._updateVertex(this);
 			break;
 		case 'midpoint':
-			this._type = 'vertex';
-			this._handled._addVertex(this);
+			edit._addVertex(this);
 			break;
 		}
 	},
@@ -953,63 +954,23 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 
 	_onVertexUpdate: function(event) {
 		var edit = this._handled.editing,
-			id = event.id,
-			i = edit._handleIdToCoordIndex(id, event.handleType),
+			updated = event.handle,
+			id = updated._id,
+			i = edit._handleIdToCoordIndex(id, updated._type),
 			pointer = this._handled,
 			origin = pointer._map.latLngToLayerPoint(pointer.getLatLng()),
 			midpoint, latlng;
 
 		/* Update the positions of the two adjacent 'midpoint' handles. */
 		if ((this._id === id - 1) && i > 0) {
-			midpoint = pointer._calculateMidpoint(i - 1, i).add(origin);
+			midpoint = edit._calculateMidpoint(i - 1, i).add(origin);
 			latlng = pointer._map.layerPointToLatLng(midpoint);
 			this.setLatLng(latlng);
 		} else if ((this._id === id + 1) && i + 1 < pointer.getPoints().length) {
-			midpoint = pointer._calculateMidpoint(i, i + 1).add(origin);
+			midpoint = edit._calculateMidpoint(i, i + 1).add(origin);
 			latlng = pointer._map.layerPointToLatLng(midpoint);
 			this.setLatLng(latlng);
 		}
-	}
-});
-
-L.Illustrate.Pointer.include({
-	_calculateMidpoint: function(i, j) {
-		var	coordinates = this.getPoints(),
-			v1 = coordinates[i],
-			v2 = coordinates[j],
-			delta = v2.subtract(v1).divideBy(2);
-
-		return v1.add(delta);
-	},
-
-	_removeVertex: function(handle) {
-		this._coordinates.splice(handle._id, 1);
-		this.setPoints(this._coordinates);
-		this.fire('edit:remove-vertex', { id: handle._id });
-	},
-
-	_addVertex: function(handle) {
-		var i = this.editing._handleIdToCoordIndex(handle._id, handle._type);
-
-		this._coordinates.splice(i, 0, L.point(handle._handleOffset));
-		this.setPoints(this._coordinates);
-		this.fire('edit:add-vertex', {
-			id: handle._id,
-			coord: handle._handleOffset,
-			handleType: handle._type
-		});
-	},
-
-	_updateVertex: function(handle) {
-		var	i = this.editing._handleIdToCoordIndex(handle._id, handle._type);
-
-		this._coordinates.splice(i, 1, L.point(handle._handleOffset));
-		this.setPoints(this._coordinates);
-		this.fire('edit:update-vertex', {
-			id: handle._id,
-			coord: handle._handleOffset,
-			handleType: handle._type
-		});
 	}
 });
 L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
@@ -1230,6 +1191,41 @@ L.Illustrate.Edit.Pointer = L.Edit.Poly.extend({
 			break;
 		}
 		return id;
+	},
+
+	_calculateMidpoint: function(i, j) {
+		var	coordinates = this._shape.getPoints(),
+			v1 = coordinates[i],
+			v2 = coordinates[j],
+			delta = v2.subtract(v1).divideBy(2);
+
+		return v1.add(delta);
+	},
+
+	_removeVertex: function(handle) {
+		var pointer = this._shape;
+
+		pointer._coordinates.splice(handle._id, 1);
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:remove-vertex', { id: handle._id });
+	},
+
+	_addVertex: function(handle) {
+		var pointer = this._shape,
+			i = this._handleIdToCoordIndex(handle._id, handle._type);
+
+		pointer._coordinates.splice(i, 0, L.point(handle._handleOffset));
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:add-vertex', { 'handle': handle });
+	},
+
+	_updateVertex: function(handle) {
+		var	pointer = this._shape,
+			i = this._handleIdToCoordIndex(handle._id, handle._type);
+
+		pointer._coordinates.splice(i, 1, L.point(handle._handleOffset));
+		pointer.setPoints(pointer._coordinates);
+		pointer.fire('edit:update-vertex', { 'handle': handle });
 	}
 });
 
