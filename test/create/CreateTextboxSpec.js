@@ -3,6 +3,10 @@ var expect = chai.expect;
 describe("L.Illustrate.Create.Textbox", function() {
 	var map;
 
+	beforeEach(function() {
+		map = new L.Map(document.createElement('div'));
+	});
+
 	describe("_setShapeOptions", function() {
 		it("Should set defaults correctly.", function() {
 			var create = new L.Illustrate.Create.Textbox(map, {}),
@@ -29,9 +33,5 @@ describe("L.Illustrate.Create.Textbox", function() {
 			expect(create.options.shapeOptions.color).to.equal(options.borderColor);
 			expect(create.options.shapeOptions.weight).to.equal(options.borderWidth);
 		});
-	});
-
-	beforeEach(function() {
-		map = new L.Map(document.createElement('div'));
 	});
 });

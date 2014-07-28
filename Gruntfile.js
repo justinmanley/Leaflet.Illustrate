@@ -60,7 +60,7 @@ module.exports = function(grunt) {
                 src: [ 'src/*.js', 'src/*/*.js', 'src/*/*/*.js', 'Gruntfile.js', 'package.json' ]
             },
             test: {
-                src: [ 'test/*/*Spec.js' ],
+                src: [ 'test/*/*Spec.js', 'test/*/*/*Spec.js' ],
             },
             grunt: {
                 src: ['Gruntfile.js']

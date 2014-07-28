@@ -1,41 +1,46 @@
 L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 	initialize: function(shape, options) {
 		L.Illustrate.EditHandle.prototype.initialize.call(this, shape, options);
+
+		if (this._handled.editing) {
+			this._editing = this._handled.editing;
+		}
+
 		this._id = options.id;
 		this._type = options.type;
 	},
 
-	_onHandleDrag: function() {
-		var edit = this._handled.editing;
+	_onHandleDrag: function(event) {
+		var handle = event.target,
+			edit = this._editing;
 
 		this._handleOffset = this._latLngToTextboxCoords(this.getLatLng());
 
-		switch(this._type) {
+		switch(handle._type) {
 		case 'vertex':
-			edit._updateVertex(this);
+			edit._updateVertex(handle);
 			break;
 		case 'midpoint':
-			edit._addVertex(this);
+			edit._addVertex(handle);
 			break;
 		}
 	},
 
-	// _onHandleClick: function(event) {
-	// 	var handle = event.target;
+	_onHandleClick: function(event) {
+		var handle = event.target,
+			edit = this._editing;
 
-	// 	this._handleOffset = this._latLngToTextboxCoords(handle.getLatLng());
+		this._handleOffset = this._latLngToTextboxCoords(handle.getLatLng());
 
-	// 	switch(this._type) {
-	// 	case 'vertex':
-	// 		this._handled._removeVertex(this._id);
-	// 		break;
-	// 	case 'midpoint':
-	// 		this._type = 'vertex';
-	// 		this.setOpacity(1);
-	// 		this._handled._addVertex(this._id, this._handleOffset);
-	// 		break;
-	// 	}
-	// },
+		switch(this._type) {
+		case 'vertex':
+			edit._removeVertex(handle);
+			break;
+		case 'midpoint':
+			edit._addVertex(handle);
+			break;
+		}
+	},
 
 	_bindListeners: function() {
 		L.Illustrate.EditHandle.prototype._bindListeners.call(this);
@@ -57,12 +62,24 @@ L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
 		}, this);
 	},
 
-	_onVertexAdd: function() {
+	_onVertexAdd: function(event) {
+		var id = event.addedId;
 
+		if (this._id === id) {
+			this._id += 1;
+			this._type = 'vertex';
+			this.setOpacity(1);
+		} else if (this._id > id) {
+			this._id += 2;
+		}
 	},
 
-	_onVertexRemove: function() {
+	_onVertexRemove: function(event) {
+		var id = event.removedId;
 
+		if (this._id > id + 1) {
+			this._id -= 2;
+		}
 	},
 
 	_onVertexUpdate: function(event) {
