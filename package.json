@@ -1,6 +1,6 @@
 {
   "name": "leaflet-illustrate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Rich annotation plugin for Leaflet.",
   "scripts": {
     "test": "grunt travis",
