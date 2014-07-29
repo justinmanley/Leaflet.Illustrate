@@ -375,20 +375,6 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._textbox = null;
 	},
 
-	// addHandler: function(name, HandlerClass) {
-	// 	if (!HandlerClass) { return this; }
-
-	// 	var handler = this[name] = new HandlerClass(this);
-
-	// 	this._handlers.push(handler);
-
-	// 	if (this.options[name]) {
-	// 		handler.enable();
-	// 	}
-
-	// 	return this;
-	// },
-
 	setCenter: function(latlng) {
 		this._latlng = latlng;
 
@@ -490,18 +476,6 @@ L.Illustrate.Selectable = L.Handler.extend({
 
 	_onDown: function(event) {
 		L.DomEvent.stopPropagation(event);
-
-		L.DomEvent
-			.on(this._selectStartTarget, L.Illustrate.Selectable.MOVE[event.type], this._onMove, this)
-			.on(this._selectStartTarget, L.Illustrate.Selectable.END[event.type], this._onUp, this);
-	},
-
-	_onMove: function(event) {
-		L.DomEvent.stopPropagation(event);
-	},
-
-	_onUp: function(event) {
-		L.DomEvent.stopPropagation(event);
 	}
 });
 L.Illustrate.Create = L.Illustrate.Create || {};
@@ -509,6 +483,16 @@ L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 	// Have *GOT* to refactor this.
 	// Really, I should get the layer point position on click, not the latlng.  There's no need to be endlessly
 	// translating between latlng and layerpoint.
+
+	statics: {
+		TYPE: 'pointer'
+	},
+
+	initialize: function(map, options) {
+		L.Draw.Polyline.prototype.initialize.call(this, map, options);
+
+		this.type = L.Illustrate.Create.Pointer.TYPE;
+	},
 
 	_fireCreatedEvent: function() {
 		var latlngs = this._poly.getLatLngs(),

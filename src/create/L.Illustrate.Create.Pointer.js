@@ -3,6 +3,16 @@ L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 	// Really, I should get the layer point position on click, not the latlng.  There's no need to be endlessly
 	// translating between latlng and layerpoint.
 
+	statics: {
+		TYPE: 'pointer'
+	},
+
+	initialize: function(map, options) {
+		L.Draw.Polyline.prototype.initialize.call(this, map, options);
+
+		this.type = L.Illustrate.Create.Pointer.TYPE;
+	},
+
 	_fireCreatedEvent: function() {
 		var latlngs = this._poly.getLatLngs(),
 			coordinates = [],

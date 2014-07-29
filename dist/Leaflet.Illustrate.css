@@ -29,3 +29,9 @@
 .leaflet-touch .leaflet-draw-toolbar .leaflet-illustrate-create-textbox {
   background-position: -270px -1px;
 }
+.leaflet-draw-toolbar .leaflet-illustrate-create-pointer {
+  background-position: -2px -2px;
+}
+.leaflet-touch .leaflet-draw-toolbar .leaflet-illustrate-create-pointer {
+  background-position: 0 -1px;
+}
