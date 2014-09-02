@@ -5,27 +5,18 @@ L.Illustrate.Textbox = L.Class.extend({
 
 	includes: [L.Mixin.Events],
 
-	options: {
-
-	},
+	options: {},
 
 	initialize: function(latlng, options) {
-		L.setOptions(this, options);
+		if (latlng.type && latlng.type === "Feature") {
+			this.fromGeoJSON(latlng);
+		} else {
+			this._latlng = latlng;
+			L.setOptions(this, options);
+		}
 
-		this._latlng = latlng;
 		this._initTextbox();
-
 		this._handlers = [];
-	},
-
-	_initTextbox: function() {
-		var textarea = new L.DivIcon({
-			className: 'leaflet-illustrate-textbox',
-			html: '<textarea style="width: 100%; height: 100%"></textarea>',
-			iconAnchor: new L.Point(0, 0)
-		});
-		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
-		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
 	},
 
 	onAdd: function(map) {
@@ -95,13 +86,50 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this._textbox.getRotation();
 	},
 
-	_updateCenter: function() {
-		this._textbox.setLatLng(this._latlng);
+	getContent: function() {
+		var textareas = this._textbox._icon.getElementsByTagName('textarea');
+
+		return textareas[0].value;
 	},
 
 	setStyle: function() {
 		// use this to change the styling of the textbox.  should accept an 'options' argument.
 		return this;
+	},
+
+	toGeoJSON: function() {
+		return {
+			"type": "Feature",
+			"geometry": {
+				"type": "Point",
+				"coordinates": [this._latlng.lng, this._latlng.lat]
+			},
+			"properties": L.extend({}, this.options, {
+				"text": this.getContent()
+			})
+		};
+	},
+
+	fromGeoJSON: function(geojson) {
+		var coordinates = geojson.geometry.coordinates;
+
+		this._latlng = L.latLng(coordinates[1], coordinates[0]);
+
+		L.setOptions(geojson.properties);
+	},
+
+	_initTextbox: function() {
+		var textarea = new L.DivIcon({
+			className: 'leaflet-illustrate-textbox',
+			html: '<textarea style="width: 100%; height: 100%"></textarea>',
+			iconAnchor: new L.Point(0, 0)
+		});
+		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
+		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
+	},
+
+	_updateCenter: function() {
+		this._textbox.setLatLng(this._latlng);
 	},
 
 	_updateSize: function() {

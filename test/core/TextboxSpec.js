@@ -5,7 +5,7 @@ var expect = chai.expect;
  */
 
 describe("L.Illustrate.Textbox", function() {
-	var map, mapDiv, textbox;
+	var map, textbox;
 
 	beforeEach(function() {
 		map = L.map(document.createElement('div')).setView([41.7896,-87.5996], 15);
@@ -20,11 +20,31 @@ describe("L.Illustrate.Textbox", function() {
 		textbox.addTo(map);
 	});
 
-	afterEach(function() {
-		mapDiv.parentNode.removeChild(mapDiv);
+	describe("#getContent", function() {
+		it("Should get the text inside the textbox", function() {
+			expect(textbox.getContent()).to.equal('');
+		});
 	});
 
-	describe("#_enableTyping", function() {
-		expect(1).to.equal(1);
+	describe("#toGeoJSON", function() {
+		it("Should return valid GeoJSON", function(done) {
+			var onSuccess = function(data) {
+					expect(data.status).to.equal('ok', data.message);
+					done();
+				},
+				onFailure = function() {
+					console.log("There was a problem with your AJAX request.");
+					done();
+				};
+
+			/* POST to geojsonlint.com to remotely validate GeoJSON. */
+			jQuery.ajax({
+				url: 'http://geojsonlint.com/validate',
+				type: 'POST',
+				data: JSON.stringify(textbox.toGeoJSON()),
+				success: onSuccess,
+				failure: onFailure
+			});
+		});
 	});
 });

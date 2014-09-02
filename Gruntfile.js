@@ -53,7 +53,9 @@ module.exports = function(grunt) {
                     beforeEach: false,
                     afterEach: false,
                     chai: false,
-                    sinon: false
+                    sinon: false,
+                    jQuery: false,
+                    $: false
                 }
             },
             source: {
