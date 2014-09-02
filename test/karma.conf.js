@@ -21,7 +21,6 @@ module.exports = function(config) {
       '../node_modules/leaflet-draw/dist/leaflet.draw.css',
       '../node_modules/chai/chai.js',
       '../node_modules/sinon/pkg/sinon-1.10.3.js',
-      '../node_modules/jquery/dist/jquery.min.js',
       '../test/SpecHelper.js',
       '../src/L.Illustrate.js',
       '../src/extends-leaflet/*.js',
