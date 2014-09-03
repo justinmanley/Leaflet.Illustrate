@@ -413,6 +413,12 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this._textbox.getRotation();
 	},
 
+	getContent: function() {
+		var textareas = this._textbox._icon.getElementsByTagName('textarea');
+
+		return textareas[0].value;
+	},
+
 	_updateCenter: function() {
 		this._textbox.setLatLng(this._latlng);
 	},

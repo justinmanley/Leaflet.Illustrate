@@ -20,7 +20,9 @@ describe("L.Illustrate.Textbox", function() {
 		textbox.addTo(map);
 	});
 
-	describe("#_enableTyping", function() {
-		expect(1).to.equal(1);
+	describe("#getContent", function() {
+		it("Should return the empty string for a new textbox with no default value.", function() {
+			expect(textbox.getContent()).to.equal('');
+		});
 	});
 });
