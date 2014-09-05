@@ -137,6 +137,28 @@ L.Illustrate.Textbox = L.Class.extend({
 	}
 });
 
+/* Add GeoJSON Conversion */
+L.Illustrate.Textbox.prototype.toGeoJSON = function() {
+	var size = this.getSize(),
+		properties = {
+			pointType: 'textbox',
+			text: this.getContent(),
+			style: {
+				width: size.x,
+				height: size.y,
+				rotation: this.getRotation()
+			}
+		},
+		feature = L.GeoJSON.getFeature(this, {
+			type: 'Point',
+			coordinates: L.GeoJSON.latLngToCoords(this.getLatLng())
+		});
+
+	feature.properties = properties;
+
+	return feature;
+};
+
 L.Illustrate.Selectable = L.Handler.extend({
 
 	includes: L.Mixin.Events,
