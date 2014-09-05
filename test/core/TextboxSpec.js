@@ -25,4 +25,25 @@ describe("L.Illustrate.Textbox", function() {
 			expect(textbox.getContent()).to.equal('');
 		});
 	});
+
+	describe("#toGeoJSON", function() {
+		it("Should create a Point Feature object with text and style properties.", function() {
+			expect(textbox.toGeoJSON()).to.deep.equal({
+				'type': 'Feature',
+				'geometry': {
+					'type': 'Point',
+					'coordinates': [-87.60107517242432, 41.79187262698525]
+				},
+				'properties': {
+					'pointType': 'textbox',
+					'text': '',
+					'style': {
+						width: 240,
+						height: 155,
+						rotation: 0
+					}
+				}
+			});
+		});
+	});
 });
