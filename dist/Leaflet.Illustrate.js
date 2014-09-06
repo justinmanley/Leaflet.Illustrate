@@ -337,11 +337,13 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_initTextbox: function() {
-		var textarea = new L.DivIcon({
-			className: 'leaflet-illustrate-textbox',
-			html: '<textarea style="width: 100%; height: 100%"></textarea>',
-			iconAnchor: new L.Point(0, 0)
-		});
+		var textContent = this.options.text || '',
+			textarea = new L.DivIcon({
+				className: 'leaflet-illustrate-textbox',
+				html: '<textarea style="width: 100%; height: 100%">' + textContent + '</textarea>',
+				iconAnchor: new L.Point(0, 0)
+			});
+			
 		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
 		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
 	},
