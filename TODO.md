@@ -30,3 +30,7 @@
 
 	* When the css 'leaflet-illustrate-textbox-outlined' property is added (and the border becomes visible), because the border is *inside* the textarea, it bumps the text a little bit down and right.  This is distracting.  Try eliminating it by adding padding of the same amount as the border-width and then removing the padding when the 'leaflet-illustrate-textbox-outlined' property is added.
 	* Should probably split this into separate methods: `L.Illustrate.Textbox._outline()` and `L.Illustrate.Textbox.unOutline()`.
+
+* Change the font to make it more readable.  Add halo to text.  Good advice in this article:
+	http://mappingcenter.esri.com/index.cfm?fa=ask.answers&q=1181
+	https://www.google.com/earth/outreach/tutorials/user_experience.html
