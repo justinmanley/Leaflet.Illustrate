@@ -83,9 +83,16 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setSize: function(size) {
+		var minWidth = (size.x < this._minSize.x) ? size.x : this._minSize.x,
+			minHeight = (size.y < this._minSize.y) ? size.y : this._minSize.y;
+
+		/* If size is smaller than this._minSize, reset this._minSize. */
+		this._minSize = new L.Point(minWidth, minHeight);
+
 		this._width = size.x;
 		this._height = size.y;
 
+		/* Set size on textarea via CSS */
 		this._updateSize();
 		this.fire('update');
 

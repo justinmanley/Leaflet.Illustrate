@@ -401,9 +401,16 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setSize: function(size) {
+		var minWidth = (size.x < this._minSize.x) ? size.x : this._minSize.x,
+			minHeight = (size.y < this._minSize.y) ? size.y : this._minSize.y;
+
+		/* If size is smaller than this._minSize, reset this._minSize. */
+		this._minSize = new L.Point(minWidth, minHeight);
+
 		this._width = size.x;
 		this._height = size.y;
 
+		/* Set size on textarea via CSS */
 		this._updateSize();
 		this.fire('update');
 
@@ -886,6 +893,21 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	_latLngToOffset: function(latlng) {
+		/* What if the user wants to reset the minSize? */
+		/* What if the user calls L.Illustrate.Textbox#setSize() with */
+		/*     a size argument that is smaller than the minSize?  Right now, */
+		/*     that would succeed, and then fail confusingly as soon as they tried */
+		/*     to edit it because it would revert to the minSize. */
+		/* Creating the textbox and editing the textbox are treated differently... */
+		/* Maybe calling setSize should reset the minSize.  Then, there won't be this confusion */
+		/* about the minSize.  The check here will still prevent the user from making  */
+		/* the textbox smaller than the minsize while in editing mode (will it?). Ah. no, */
+		/* That's not so great, because it will allow the user to expand the textbox, but won't */
+		/* Let them make it smaller again.  Why do I need the minSize in editing mode? */
+		/* Might as well let them make it as small as possible, right? */
+		/* Maybe the minSize should just be fixed. If setSize is smaller than the minSize, then it should */
+		/* reset minSize.  Otherwise, it has no effect on minSize. */
+
 		var offset = this._latLngToTextboxCoords(latlng),
 			minSize = this._handled._minSize,
 			x = (Math.abs(offset.x) > minSize.x) ? offset.x : minSize.x,
@@ -1022,9 +1044,13 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 	_onHandleDrag: function(event) {
 		var handle = event.target,
-			offset = this._latLngToOffset(handle.getLatLng());
+			coord = this._latLngToTextboxCoords(handle.getLatLng()),
+			minOffset = this._handled._minSize.divideBy(2),
+			x = (Math.abs(coord.x) < minOffset.x) ? minOffset.x : coord.x,
+			y = (Math.abs(coord.y) < minOffset.y) ? minOffset.y : coord.y,
+			offset = new L.Point(x,y);
 
-		this._handled.setSize(offset.abs().multiplyBy(2));
+		this._handled.setSize(offset.abs().multiplyBy(2).round());
 	},
 
 	updateHandle: function() {
