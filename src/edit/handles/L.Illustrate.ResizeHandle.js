@@ -10,13 +10,18 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 	_onHandleDrag: function(event) {
 		var handle = event.target,
-			coord = this._latLngToTextboxCoords(handle.getLatLng()),
-			minOffset = this._handled._minSize.divideBy(2),
-			x = (Math.abs(coord.x) < minOffset.x) ? minOffset.x : coord.x,
-			y = (Math.abs(coord.y) < minOffset.y) ? minOffset.y : coord.y,
-			offset = new L.Point(x,y);
+			offset = this._getOffset(handle.getLatLng());
 
 		this._handled.setSize(offset.abs().multiplyBy(2).round());
+	},
+
+	_getOffset: function(latlng) {
+		var coord = this._latLngToTextboxCoords(latlng),
+			minOffset = this._handled._minSize.divideBy(2),
+			x = (Math.abs(coord.x) < minOffset.x) ? minOffset.x : coord.x,
+			y = (Math.abs(coord.y) < minOffset.y) ? minOffset.y : coord.y;
+
+		return new L.Point(x,y);
 	},
 
 	updateHandle: function() {

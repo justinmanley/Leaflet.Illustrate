@@ -890,31 +890,8 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		var map = this._handled._map;
 
 		return map.layerPointToLatLng(this._textboxCoordsToLayerPoint(coord, opt));
-	},
-
-	_latLngToOffset: function(latlng) {
-		/* What if the user wants to reset the minSize? */
-		/* What if the user calls L.Illustrate.Textbox#setSize() with */
-		/*     a size argument that is smaller than the minSize?  Right now, */
-		/*     that would succeed, and then fail confusingly as soon as they tried */
-		/*     to edit it because it would revert to the minSize. */
-		/* Creating the textbox and editing the textbox are treated differently... */
-		/* Maybe calling setSize should reset the minSize.  Then, there won't be this confusion */
-		/* about the minSize.  The check here will still prevent the user from making  */
-		/* the textbox smaller than the minsize while in editing mode (will it?). Ah. no, */
-		/* That's not so great, because it will allow the user to expand the textbox, but won't */
-		/* Let them make it smaller again.  Why do I need the minSize in editing mode? */
-		/* Might as well let them make it as small as possible, right? */
-		/* Maybe the minSize should just be fixed. If setSize is smaller than the minSize, then it should */
-		/* reset minSize.  Otherwise, it has no effect on minSize. */
-
-		var offset = this._latLngToTextboxCoords(latlng),
-			minSize = this._handled._minSize,
-			x = (Math.abs(offset.x) > minSize.x) ? offset.x : minSize.x,
-			y = (Math.abs(offset.y) > minSize.y) ? -offset.y : minSize.y;
-
-		return new L.Point(x, y).round();
 	}
+	
 });
 L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 	options: {
@@ -1044,13 +1021,18 @@ L.Illustrate.ResizeHandle = L.Illustrate.EditHandle.extend({
 
 	_onHandleDrag: function(event) {
 		var handle = event.target,
-			coord = this._latLngToTextboxCoords(handle.getLatLng()),
-			minOffset = this._handled._minSize.divideBy(2),
-			x = (Math.abs(coord.x) < minOffset.x) ? minOffset.x : coord.x,
-			y = (Math.abs(coord.y) < minOffset.y) ? minOffset.y : coord.y,
-			offset = new L.Point(x,y);
+			offset = this._getOffset(handle.getLatLng());
 
 		this._handled.setSize(offset.abs().multiplyBy(2).round());
+	},
+
+	_getOffset: function(latlng) {
+		var coord = this._latLngToTextboxCoords(latlng),
+			minOffset = this._handled._minSize.divideBy(2),
+			x = (Math.abs(coord.x) < minOffset.x) ? minOffset.x : coord.x,
+			y = (Math.abs(coord.y) < minOffset.y) ? minOffset.y : coord.y;
+
+		return new L.Point(x,y);
 	},
 
 	updateHandle: function() {

@@ -98,14 +98,14 @@ describe("L.Illustrate.EditHandle", function() {
 			});
 		});
 
-		describe("#_latLngToOffset", function() {
+		describe("#_getOffset", function() {
 			it("When rotation is 0 acts as identity on current latlng", function() {
 				textbox.setRotation(0);
 
 				expect(updateHandle.called).to.equal(true);
 
 				var oldSize = textbox.getSize(),
-					newOffset = resizeHandle._latLngToOffset(resizeHandle.getLatLng()),
+					newOffset = resizeHandle._getOffset(resizeHandle.getLatLng()),
 					newSize = newOffset.abs().multiplyBy(2),
 					delta = oldSize.distanceTo(newSize);
 
@@ -118,7 +118,7 @@ describe("L.Illustrate.EditHandle", function() {
 				textbox.setRotation(Math.PI/4);
 
 				var oldSize = textbox.getSize(),
-					newOffset = resizeHandle._latLngToOffset(resizeHandle.getLatLng()),
+					newOffset = resizeHandle._getOffset(resizeHandle.getLatLng()),
 					newSize = newOffset.abs().multiplyBy(2),
 					delta = oldSize.distanceTo(newSize);
 
