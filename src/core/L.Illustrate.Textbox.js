@@ -8,8 +8,8 @@ L.Illustrate.Textbox = L.Class.extend({
 	options: {
 
 		/* this._minSize is used by edit handles (L.Illustrate.EditHandle) when updating size. */
-		minWidth: 200,
-		minHeight: 125
+		minWidth: 10,
+		minHeight: 10
 
 	},
 
