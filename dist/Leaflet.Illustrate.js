@@ -325,12 +325,18 @@ L.Illustrate.Textbox = L.Class.extend({
 
 	options: {
 
+		/* this._minSize is used by edit handles (L.Illustrate.EditHandle) when updating size. */
+		minWidth: 200,
+		minHeight: 125
+
 	},
 
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 
 		this._latlng = latlng;
+		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
+
 		this._initTextbox();
 
 		this._handlers = [];
@@ -342,13 +348,10 @@ L.Illustrate.Textbox = L.Class.extend({
 				className: 'leaflet-illustrate-textbox',
 				html: '<textarea style="width: 100%; height: 100%">' + textContent + '</textarea>',
 				iconAnchor: new L.Point(0, 0)
-			}),
-			size = new L.Point(this.options.minWidth, this.options.minHeight);
+			});
 
 		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
-		this._minSize = size;
-
-		this.setSize(size);
+		this.setSize(this._minSize);
 	},
 
 	onAdd: function(map) {
