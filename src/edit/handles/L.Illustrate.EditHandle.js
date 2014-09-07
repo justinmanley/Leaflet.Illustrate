@@ -145,14 +145,6 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		var map = this._handled._map;
 
 		return map.layerPointToLatLng(this._textboxCoordsToLayerPoint(coord, opt));
-	},
-
-	_latLngToOffset: function(latlng) {
-		var offset = this._latLngToTextboxCoords(latlng),
-			minSize = this._handled._minSize,
-			x = (Math.abs(offset.x) > minSize.x) ? offset.x : minSize.x,
-			y = (Math.abs(offset.y) > minSize.y) ? -offset.y : minSize.y;
-
-		return new L.Point(x, y).round();
 	}
+	
 });
