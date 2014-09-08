@@ -9,9 +9,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 		textOptions: {
 			borderColor: '#4387fd',
-			borderWidth: 2,
-			minWidth: 10,
-			minHeight: 10
+			borderWidth: 2
 		}
 	},
 
@@ -47,8 +45,12 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 
 	_setShapeOptions: function() {
 		/* shapeOptions are set dynamically so that the Rectangle looks the same as the Textbox. */
-		var borderWidth = this.options.textOptions.borderWidth ? this.options.textOptions.borderWidth : 2,
-			borderColor = this.options.textOptions.borderColor ? this.options.textOptions.borderColor : '#4387fd';
+		var borderWidth = this.options.textOptions.borderWidth ?
+						  this.options.textOptions.borderWidth :
+						  2,
+			borderColor = this.options.textOptions.borderColor ?
+			              this.options.textOptions.borderColor :
+			              '#4387fd';
 
 		this.options.shapeOptions = L.extend({}, this.options.shapeOptions, {
 			weight: borderWidth,

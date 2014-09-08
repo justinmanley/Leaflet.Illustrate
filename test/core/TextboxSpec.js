@@ -99,4 +99,12 @@ describe("L.Illustrate.Textbox", function() {
 			});
 		});
 	});
+
+	describe("#getTextarea", function() {
+		it("Should return a <textarea> element.", function() {
+			var textarea = textbox.getTextarea();
+
+			expect(textarea.nodeName).to.equal('TEXTAREA');
+		});
+	});
 });

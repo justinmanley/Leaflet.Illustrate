@@ -30,4 +30,21 @@ describe("L.Illustrate.Edit.Pointer", function() {
 		});
 	});
 
+	describe("draw:edited", function() {
+		it.skip("Should fire when content inside the textarea is changed.", function(done) {
+			var textarea = textbox.getTextarea(),
+				text = 'Some new text';
+
+			map.on('draw:edited', function(event) {
+				event.layers.eachLayer(function(layer) {
+					expect(layer.getTextarea().value).to.equal(text);
+				});
+				done();
+			});
+
+			/* Setting the textarea value programmatically doesn't fire the change event. */
+			textarea.innerHTML = text;
+		});
+	});
+
 });

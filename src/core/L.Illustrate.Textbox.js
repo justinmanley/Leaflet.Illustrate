@@ -9,7 +9,8 @@ L.Illustrate.Textbox = L.Class.extend({
 
 		/* this._minSize is used by edit handles (L.Illustrate.EditHandle) when updating size. */
 		minWidth: 10,
-		minHeight: 10
+		minHeight: 10,
+		textEditable: true
 
 	},
 
@@ -39,14 +40,19 @@ L.Illustrate.Textbox = L.Class.extend({
 	onAdd: function(map) {
 		this._map = map;
 
-		this._map.addLayer(this._textbox);
+		map.addLayer(this._textbox);
 		this._updateCenter();
 		this._updateSize();
 
+		/* Enable typing, text selection, etc. */
 		this._enableTyping();
-		// this.addHandler('textselect', L.Illustrate.Textbox.Select);
 
-		L.DomUtil.addClass(this._textbox._icon.children[0], 'leaflet-illustrate-textbox-outlined');
+		/* Disable the textarea if the textbox content should not be editable. */
+		if (!this.options.textEditable) {
+			this.getTextarea().setAttribute('readonly', 'readonly');
+		}
+
+		L.DomUtil.addClass(this.getTextarea(), 'leaflet-illustrate-textbox-outlined');
 
 		this.fire('add');
 	},
@@ -125,6 +131,10 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
+	getTextarea: function() {
+		return this._textbox._icon.children[0];
+	},
+
 	_updateSize: function() {
 		if (this._textbox._icon) {
 			this._textbox._icon.style.marginTop = - Math.round(this._height/2) + "px";
@@ -134,8 +144,20 @@ L.Illustrate.Textbox = L.Class.extend({
 		}
 	},
 
+	_onTextEdit: function() {
+		if (this._text_edited) {
+			this._map.fire('draw:edited', {
+				layers: new L.LayerGroup().addLayer(this)
+			});
+			this._text_edited = false;
+		}
+	},
+
 	_enableTyping: function() {
-		var textarea = this._textbox._icon.children[0];
+		var textarea = this.getTextarea(),
+			onTextChange = function() {
+				this._text_edited = true;
+			};
 
 		this._selecting = new L.Illustrate.Selectable(textarea);
 
@@ -149,7 +171,15 @@ L.Illustrate.Textbox = L.Class.extend({
 			this._map.dragging.enable();
 			this._selecting.disable();
 		}, this);
+
+		L.DomEvent.on(textarea, 'change', onTextChange, this);
+		L.DomEvent.on(textarea, 'keyup', onTextChange, this);
+		L.DomEvent.on(textarea, 'paste', onTextChange, this);
+
+		/* When user leaves the textarea, fire a 'draw:created' event if they changed anything. */
+		L.DomEvent.on(textarea, 'blur', this._onTextEdit, this);
 	}
+
 });
 
 /* Add GeoJSON Conversion */
