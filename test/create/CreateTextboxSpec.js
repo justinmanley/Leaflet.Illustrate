@@ -4,7 +4,8 @@ describe("L.Illustrate.Create.Textbox", function() {
 	var map;
 
 	beforeEach(function() {
-		map = new L.Map(document.createElement('div'));
+		map = new L.Map(document.createElement('div'))
+			.setView([0, 0], 15);
 	});
 
 	describe("_setShapeOptions", function() {
@@ -32,6 +33,27 @@ describe("L.Illustrate.Create.Textbox", function() {
 			/* Set dynamically from the options that were passed in. */
 			expect(create.options.shapeOptions.color).to.equal(options.borderColor);
 			expect(create.options.shapeOptions.weight).to.equal(options.borderWidth);
+		});
+	});
+
+	describe("#_drawShape", function() {
+		it("Should yield a textbox of the correct size.", function(done) {
+			var create = new L.Illustrate.Create.Textbox(map, {}),
+				start = new L.LatLng(0, 0),
+				size = new L.Point(200, 100),
+				latlng = map.layerPointToLatLng(map.latLngToLayerPoint(start).add(size));
+
+			create._startLatLng = start;
+			L.Draw.Rectangle.prototype._drawShape.call(create, latlng);
+
+			map.on('draw:created', function(event) {
+				var textbox = event.layer;
+
+				expect(textbox.getSize()).to.be.closeToPoint(size, 3);
+				done();
+			});
+
+			create._fireCreatedEvent();
 		});
 	});
 });
