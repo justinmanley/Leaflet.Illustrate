@@ -365,6 +365,11 @@ L.Illustrate.Textbox = L.Class.extend({
 		/* Enable typing, text selection, etc. */
 		this._enableTyping();
 
+		/* Propagate click events from the L.RotatbleMarker to the L.Illustrate.Textbox */
+		this._textbox.on('click', function(event) {
+			this.fire('click', event);
+		}, this);
+
 		/* Disable the textarea if the textbox content should not be editable. */
 		if (!this.options.textEditable) {
 			this.getTextarea().setAttribute('readonly', 'readonly');
@@ -381,6 +386,10 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	onRemove: function() {
+		/* In case the textbox was removed from the map while dragging was disabled. */
+		/* (see _enableTyping) */
+		this._map.dragging.enable();
+
 		this._map.removeLayer(this._textbox);
 
 		this.fire('remove');
@@ -462,6 +471,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		}
 	},
 
+	/* When user leaves the textarea, fire a 'draw:edited' event if they changed anything. */
 	_onTextEdit: function() {
 		if (this._text_edited) {
 			this._map.fire('draw:edited', {
@@ -472,31 +482,33 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	_enableTyping: function() {
-		var textarea = this.getTextarea(),
+		var map = this._map,
+			textarea = this.getTextarea(),
 			onTextChange = function() {
 				this._text_edited = true;
 			};
 
+		/* Enable text selection and editing. */
 		this._selecting = new L.Illustrate.Selectable(textarea);
 
 		L.DomEvent.on(textarea, 'click', function(event) {
 			event.target.focus();
-			this._map.dragging.disable();
+			map.dragging.disable();
 			this._selecting.enable();
 		}, this);
 
 		L.DomEvent.on(textarea, 'mouseout', function() {
-			this._map.dragging.enable();
+			map.dragging.enable();
 			this._selecting.disable();
 		}, this);
 
+		/* Fire 'draw:edited' event when text content changes. */
 		L.DomEvent.on(textarea, 'change', onTextChange, this);
 		L.DomEvent.on(textarea, 'keyup', onTextChange, this);
 		L.DomEvent.on(textarea, 'paste', onTextChange, this);
 
-		/* When user leaves the textarea, fire a 'draw:created' event if they changed anything. */
 		L.DomEvent.on(textarea, 'blur', this._onTextEdit, this);
-	}
+	},
 
 });
 
@@ -524,7 +536,7 @@ L.Illustrate.Textbox.prototype.toGeoJSON = function() {
 
 L.Illustrate.Selectable = L.Handler.extend({
 
-	includes: L.Mixin.Events,
+	includes: [L.Mixin.Events],
 
 	statics: {
 		START: L.Draggable.START,
@@ -705,27 +717,31 @@ L.Illustrate.Control = L.Control.Draw.extend({
 
 		L.Control.prototype.initialize.call(this, options);
 
-		var toolbar;
+		var id,
+			toolbar;
 
 		this._toolbars = {};
 
-		// Initialize toolbars
+		/* Initialize toolbars for creating L.Illustrate objects. */
 		if (L.Illustrate.Toolbar && this.options.draw) {
 			toolbar = new L.Illustrate.Toolbar(this.options.draw);
-
-			this._toolbars[L.Illustrate.Toolbar.TYPE] = toolbar;
+			id = L.stamp(toolbar);
+			this._toolbars[id] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.Illustrate.Toolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
 
+		/* Initialize generic edit/delete toolbars. */
 		if (L.EditToolbar && this.options.edit) {
 			toolbar = new L.EditToolbar(this.options.edit);
+			id = L.stamp(toolbar);
+			this._toolbars[id] = toolbar;
 
-			this._toolbars[L.EditToolbar.TYPE] = toolbar;
+			this._toolbars[id] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
 	}
 });

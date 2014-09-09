@@ -60,27 +60,31 @@ L.Illustrate.Control = L.Control.Draw.extend({
 
 		L.Control.prototype.initialize.call(this, options);
 
-		var toolbar;
+		var id,
+			toolbar;
 
 		this._toolbars = {};
 
-		// Initialize toolbars
+		/* Initialize toolbars for creating L.Illustrate objects. */
 		if (L.Illustrate.Toolbar && this.options.draw) {
 			toolbar = new L.Illustrate.Toolbar(this.options.draw);
-
-			this._toolbars[L.Illustrate.Toolbar.TYPE] = toolbar;
+			id = L.stamp(toolbar);
+			this._toolbars[id] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.Illustrate.Toolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
 
+		/* Initialize generic edit/delete toolbars. */
 		if (L.EditToolbar && this.options.edit) {
 			toolbar = new L.EditToolbar(this.options.edit);
+			id = L.stamp(toolbar);
+			this._toolbars[id] = toolbar;
 
-			this._toolbars[L.EditToolbar.TYPE] = toolbar;
+			this._toolbars[id] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
 	}
 });

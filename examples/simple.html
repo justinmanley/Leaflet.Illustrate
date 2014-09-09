@@ -26,12 +26,9 @@
 		var drawnItems = new L.FeatureGroup();
 		map.addLayer(drawnItems);
 
-		var illustrateControl = new L.Illustrate.Control({
-			edit: {
-				featureGroup: drawnItems
-			}
-		});
-		map.addControl(illustrateControl);
+		new L.Illustrate.Control({
+			edit: { featureGroup: drawnItems }
+		}).addTo(map);
 
 		map.on('draw:created', function(evt) {
 			var type = evt.layerType,
