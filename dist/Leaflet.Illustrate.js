@@ -536,7 +536,9 @@ L.Illustrate.Textbox.prototype.toGeoJSON = function() {
 			style: {
 				width: size.x,
 				height: size.y,
-				rotation: this.getRotation()
+				// mocked until refactoring is finshed
+				// rotation: this.getRotation()
+				rotation: 0
 			}
 		},
 		feature = L.GeoJSON.getFeature(this, {
