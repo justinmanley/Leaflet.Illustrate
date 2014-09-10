@@ -6,41 +6,43 @@ L.Illustrate.Textbox = L.Class.extend({
 	includes: [L.Mixin.Events],
 
 	options: {
-
 		/* this._minSize is used by edit handles (L.Illustrate.EditHandle) when updating size. */
-		minWidth: 10,
-		minHeight: 10,
-		textEditable: true
-
+		minSize: [10, 10],
+		textEditable: true,
+		textContent: ''
 	},
 
 	initialize: function(latlng, options) {
 		L.setOptions(this, options);
 
 		this._latlng = latlng;
-		this._minSize = new L.Point(this.options.minWidth, this.options.minHeight);
-
-		this._initTextbox();
-
+		this._textContent = this.options.textContent;
+		this._minSize = new L.Point(this.options.minSize[0], this.options.minSize[1]);
 		this._handlers = [];
+
+		if (this.options.size) {
+			this.setSize(this.options.size[0], this.options.size[1]);
+		} else {
+			this.setSize(this._minSize);
+		}
 	},
 
 	_initTextbox: function() {
-		var textContent = this.options.text || '',
-			textarea = new L.DivIcon({
+		var	textarea = new L.DivIcon({
 				className: 'leaflet-illustrate-textbox',
-				html: '<textarea style="width: 100%; height: 100%">' + textContent + '</textarea>',
+				html: '<textarea style="width: 100%; height: 100%">' + this.getContent() + '</textarea>',
 				iconAnchor: new L.Point(0, 0)
 			});
 
 		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
-		this.setSize(this._minSize);
 	},
 
 	onAdd: function(map) {
 		this._map = map;
 
+		this._initTextbox();
 		map.addLayer(this._textbox);
+
 		this._updateCenter();
 		this._updateSize();
 
@@ -71,6 +73,9 @@ L.Illustrate.Textbox = L.Class.extend({
 		/* In case the textbox was removed from the map while dragging was disabled. */
 		/* (see _enableTyping) */
 		this._map.dragging.enable();
+
+		/* Save the text content of the textbox. */
+		this.getContent();
 
 		this._map.removeLayer(this._textbox);
 
@@ -108,7 +113,9 @@ L.Illustrate.Textbox = L.Class.extend({
 		this._height = size.y;
 
 		/* Set size on textarea via CSS */
-		this._updateSize();
+		if (this._map) {
+			this._updateSize();
+		}
 		this.fire('update');
 
 		return this;
@@ -125,10 +132,18 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this._textbox.getRotation();
 	},
 
-	getContent: function() {
-		var textareas = this._textbox._icon.getElementsByTagName('textarea');
+	setContent: function() {
 
-		return textareas[0].value;
+	},
+
+	getContent: function() {
+		/* Don't want to call this.getTextarea() if the textbox has been removed from the map. */
+		if (this._textbox) {
+			this._textContent = this.getTextarea().value;
+		}
+
+		console.log(this._textContent);
+		return this._textContent;
 	},
 
 	_updateCenter: function() {

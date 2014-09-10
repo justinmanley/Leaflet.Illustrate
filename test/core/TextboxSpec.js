@@ -27,9 +27,37 @@ describe("L.Illustrate.Textbox", function() {
 		});
 	});
 
+	describe("#onAdd", function() {
+		it("Should create a textarea containing the most recent input when removed, then re-added to the map.", function() {
+			var content = 'Some new content';
+
+			textbox.getTextarea().innerHTML = content;
+			map.removeLayer(textbox);
+			map.addLayer(textbox);
+			expect(textbox.getContent()).to.equal(content);
+		});
+	});
+
 	describe("#getContent", function() {
 		it("Should return the empty string for a new textbox with no default value.", function() {
 			expect(textbox.getContent()).to.equal('');
+		});
+
+		it("Should return a value that is set via assignment to the value property of the textarea.", function() {
+			var textarea = textbox.getTextarea(),
+				content = 'My new content.';
+
+			textarea.innerHTML = content;
+			expect(textbox.getContent()).to.equal(content);
+		});
+
+		it("Should return the contents of the textbox even after the textbox has been removed from the map.", function() {
+			var textarea = textbox.getTextarea(),
+				content = 'My new content.';
+
+			textarea.innerHTML = content;
+			map.removeLayer(textbox);
+			expect(textbox.getContent()).to.equal(content);
 		});
 	});
 
