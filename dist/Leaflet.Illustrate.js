@@ -509,8 +509,8 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 L.Illustrate.Textbox.prototype.toGeoJSON = function() {
 	var size = this.getSize(),
 		properties = {
-			pointType: 'textbox',
-			text: this.getContent(),
+			annotationType: 'textbox',
+			textContent: this.getContent(),
 			style: {
 				width: size.x,
 				height: size.y,
