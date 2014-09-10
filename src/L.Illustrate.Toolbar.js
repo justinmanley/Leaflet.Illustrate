@@ -95,3 +95,8 @@ L.Map.addInitHook(function() {
 		this.addControl(this.illustrateControl);
 	}
 });
+
+/* Override the _toggleMarkerHighlight method to prevent annoying highlighting of textboxes. */
+if (L.EditToolbar.Edit) {
+	L.EditToolbar.Edit.prototype._toggleMarkerHighlight = function() {};
+}

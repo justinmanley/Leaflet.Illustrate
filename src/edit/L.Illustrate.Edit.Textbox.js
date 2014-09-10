@@ -2,6 +2,9 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
+		/* L.EditToolbar.Edit#_enableLayerEdit enables dragging - but we don't want that. */
+		this._shape.dragging.disable();
+
 		if (this._shape._map) {
 			this._map = this._shape._map;
 
@@ -14,6 +17,8 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._map.removeLayer(this._handles);
 			delete this._handles;
 		}
+
+		this._map = null;
 	},
 
 	_initHandles: function() {

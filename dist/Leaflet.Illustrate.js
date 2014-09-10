@@ -55,6 +55,7 @@ L.RotatableMarker = L.Marker.extend({
 
 	setRotation: function(theta) {
 		this._rotation = theta;
+		this.update();
 	},
 
 	getRotation: function() {
@@ -316,7 +317,7 @@ L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
 		}
 	}
 });
-L.Illustrate.Textbox = L.Class.extend({
+L.Illustrate.Textbox = L.RotatableMarker.extend({
 	statics: {
 		TYPE: 'textbox'
 	},
@@ -331,9 +332,14 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	initialize: function(latlng, options) {
-		L.setOptions(this, options);
+		options.icon = new L.DivIcon({
+			className: 'leaflet-illustrate-textbox',
+			html: '<textarea style="width: 100%; height: 100%">' + this.options.textContent + '</textarea>',
+			iconAnchor: new L.Point(0, 0)
+		});
 
-		this._latlng = latlng;
+		L.RotatableMarker.prototype.initialize.call(this, latlng, options);
+
 		this._textContent = this.options.textContent;
 		this._minSize = new L.Point(this.options.minSize[0], this.options.minSize[1]);
 		this._handlers = [];
@@ -343,34 +349,18 @@ L.Illustrate.Textbox = L.Class.extend({
 		} else {
 			this.setSize(this._minSize);
 		}
-	},
-
-	_initTextbox: function() {
-		var	textarea = new L.DivIcon({
-				className: 'leaflet-illustrate-textbox',
-				html: '<textarea style="width: 100%; height: 100%">' + this.getContent() + '</textarea>',
-				iconAnchor: new L.Point(0, 0)
-			});
-
-		this._textbox = new L.RotatableMarker(this._latlng, { icon: textarea, rotation: 0 });
+						
 	},
 
 	onAdd: function(map) {
-		this._map = map;
+		L.RotatableMarker.prototype.onAdd.call(this, map);
 
-		this._initTextbox();
-		map.addLayer(this._textbox);
-
+		this.setContent(this._textContent);
 		this._updateCenter();
 		this._updateSize();
 
 		/* Enable typing, text selection, etc. */
 		this._enableTyping();
-
-		/* Propagate click events from the L.RotatbleMarker to the L.Illustrate.Textbox */
-		this._textbox.on('click', function(event) {
-			this.fire('click', event);
-		}, this);
 
 		/* Disable the textarea if the textbox content should not be editable. */
 		if (!this.options.textEditable) {
@@ -378,8 +368,6 @@ L.Illustrate.Textbox = L.Class.extend({
 		}
 
 		L.DomUtil.addClass(this.getTextarea(), 'leaflet-illustrate-textbox-outlined');
-
-		this.fire('add');
 	},
 
 	addTo: function(map) {
@@ -387,7 +375,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		return this;
 	},
 
-	onRemove: function() {
+	onRemove: function(map) {
 		/* In case the textbox was removed from the map while dragging was disabled. */
 		/* (see _enableTyping) */
 		this._map.dragging.enable();
@@ -395,12 +383,7 @@ L.Illustrate.Textbox = L.Class.extend({
 		/* Save the text content of the textbox. */
 		this.getContent();
 
-		this._map.removeLayer(this._textbox);
-
-		this.fire('remove');
-
-		this._map = null;
-		this._textbox = null;
+		L.RotatableMarker.prototype.onRemove.call(this, map);
 	},
 
 	setCenter: function(latlng) {
@@ -440,32 +423,27 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	setRotation: function(theta) {
-		this._textbox.setRotation(theta % (2*Math.PI));
-		this._textbox.update();
+		L.RotatableMarker.prototype.setRotation.call(this, theta);
 		this.fire('update');
 		return this;
 	},
 
-	getRotation: function() {
-		return this._textbox.getRotation();
-	},
-
-	setContent: function() {
-
+	setContent: function(text) {
+		this.getTextarea().innerHTML = text;
+		return this;
 	},
 
 	getContent: function() {
 		/* Don't want to call this.getTextarea() if the textbox has been removed from the map. */
-		if (this._textbox) {
+		if (this._map) {
 			this._textContent = this.getTextarea().value;
 		}
 
-		console.log(this._textContent);
 		return this._textContent;
 	},
 
 	_updateCenter: function() {
-		this._textbox.setLatLng(this._latlng);
+		this.setLatLng(this._latlng);
 	},
 
 	setStyle: function() {
@@ -474,15 +452,15 @@ L.Illustrate.Textbox = L.Class.extend({
 	},
 
 	getTextarea: function() {
-		return this._textbox._icon.children[0];
+		return this._icon.children[0];
 	},
 
 	_updateSize: function() {
-		if (this._textbox._icon) {
-			this._textbox._icon.style.marginTop = - Math.round(this._height/2) + "px";
-			this._textbox._icon.style.marginLeft = - Math.round(this._width/2) + "px";
-			this._textbox._icon.style.width = this._width + "px";
-			this._textbox._icon.style.height = this._height + "px";
+		if (this._icon) {
+			this._icon.style.marginTop = - Math.round(this._height/2) + "px";
+			this._icon.style.marginLeft = - Math.round(this._width/2) + "px";
+			this._icon.style.width = this._width + "px";
+			this._icon.style.height = this._height + "px";
 		}
 	},
 
@@ -769,6 +747,11 @@ L.Map.addInitHook(function() {
 		this.addControl(this.illustrateControl);
 	}
 });
+
+/* Override the _toggleMarkerHighlight method to prevent annoying highlighting of textboxes. */
+if (L.EditToolbar.Edit) {
+	L.EditToolbar.Edit.prototype._toggleMarkerHighlight = function() {};
+}
 L.Illustrate.tooltipText = {
 	create: {
 		toolbar: {
@@ -1380,6 +1363,9 @@ L.Illustrate.Edit = L.Illustrate.Edit || {};
 
 L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 	addHooks: function() {
+		/* L.EditToolbar.Edit#_enableLayerEdit enables dragging - but we don't want that. */
+		this._shape.dragging.disable();
+
 		if (this._shape._map) {
 			this._map = this._shape._map;
 
@@ -1392,6 +1378,8 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._map.removeLayer(this._handles);
 			delete this._handles;
 		}
+
+		this._map = null;
 	},
 
 	_initHandles: function() {
