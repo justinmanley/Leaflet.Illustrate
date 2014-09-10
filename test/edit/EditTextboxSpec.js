@@ -1,6 +1,6 @@
 var expect = chai.expect;
 
-describe("L.Illustrate.Edit.Pointer", function() {
+describe("L.Illustrate.Edit.Textbox", function() {
 	var map, textbox;
 
 	beforeEach(function() {

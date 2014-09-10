@@ -13,9 +13,10 @@ describe("L.Illustrate.Textbox", function() {
 
 	beforeEach(function() {
 		var center = new L.LatLng(41.79187262698525, -87.60107517242432),
+			defaults = L.Illustrate.Create.Textbox.prototype.options.shapeOptions,
 			size = new L.Point(240, 155);
 
-		textbox = new L.Illustrate.Textbox(center, L.Illustrate.Create.Textbox.prototype.options.shapeOptions)
+		textbox = new L.Illustrate.Textbox(center, defaults)
 			.setSize(size)
 			.addTo(map);
 	});
@@ -35,6 +36,16 @@ describe("L.Illustrate.Textbox", function() {
 			map.removeLayer(textbox);
 			map.addLayer(textbox);
 			expect(textbox.getContent()).to.equal(content);
+		});
+	});
+
+	describe("#onRemove", function() {
+		it("Should remove the <textarea> from the map", function() {
+			var textareas;
+			map.removeLayer(textbox);
+
+			textareas = document.getElementsByTagName('textarea');
+			expect(textareas.length).to.equal(0);
 		});
 	});
 
@@ -135,4 +146,5 @@ describe("L.Illustrate.Textbox", function() {
 			expect(textarea.nodeName).to.equal('TEXTAREA');
 		});
 	});
+
 });

@@ -162,5 +162,22 @@ describe("L.Illustrate.EditHandle", function() {
 			expect(pointerLatLngs[0]).to.be.closeToLatLng(midpoint, 0.001);
 			expect(pointerLatLngs[1]).to.be.closeToLatLng(rotateHandle.getLatLng(), 0.001);
 		});
+
+		describe("#_onHandleDrag", function() {
+			it("Updates the rotation of the textbox", function() {
+				textbox.editing.enable();
+
+				var rotateHandle = textbox.editing._rotateHandle,
+					oldLatLng = rotateHandle.getLatLng(),
+					oldPosition = rotateHandle._latLngToTextboxCoords(oldLatLng),
+					newPosition = new L.Point(oldPosition.y, oldPosition.x),
+					newLatLng = rotateHandle._textboxCoordsToLatLng(newPosition);
+
+				rotateHandle.setLatLng(newLatLng);
+				rotateHandle._onHandleDrag({ target: rotateHandle });
+				expect(textbox.getRotation()).to.be.closeTo(Math.PI/2, 0.000001);
+
+			});
+		});
 	});
 });
