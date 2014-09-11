@@ -326,7 +326,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 	options: {
 		/* this._minSize is used by edit handles (L.Illustrate.EditHandle) when updating size. */
-		minSize: [10, 10],
+		minSize: new L.Point(10, 10),
 		textEditable: true,
 		textContent: ''
 	},
@@ -341,15 +341,9 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		L.RotatableMarker.prototype.initialize.call(this, latlng, options);
 
 		this._textContent = this.options.textContent;
-		this._minSize = new L.Point(this.options.minSize[0], this.options.minSize[1]);
-		this._handlers = [];
-
-		if (this.options.size) {
-			this.setSize(this.options.size[0], this.options.size[1]);
-		} else {
-			this.setSize(this._minSize);
-		}
-						
+		this._minSize = this.options.minSize;
+		
+		this.setSize(this.options.size || this._minSize);
 	},
 
 	onAdd: function(map) {
@@ -400,7 +394,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	},
 
 	getSize: function() {
-		return new L.Point(this._width, this._height);
+		return this._size;
 	},
 
 	setSize: function(size) {
@@ -410,8 +404,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		/* If size is smaller than this._minSize, reset this._minSize. */
 		this._minSize = new L.Point(minWidth, minHeight);
 
-		this._width = size.x;
-		this._height = size.y;
+		this._size = size;
 
 		/* Set size on textarea via CSS */
 		if (this._map) {
@@ -456,11 +449,13 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	},
 
 	_updateSize: function() {
+		var size = this.getSize();
+
 		if (this._icon) {
-			this._icon.style.marginTop = - Math.round(this._height/2) + "px";
-			this._icon.style.marginLeft = - Math.round(this._width/2) + "px";
-			this._icon.style.width = this._width + "px";
-			this._icon.style.height = this._height + "px";
+			this._icon.style.marginTop = - Math.round(size.y/2) + "px";
+			this._icon.style.marginLeft = - Math.round(size.x/2) + "px";
+			this._icon.style.width = size.x + "px";
+			this._icon.style.height = size.y + "px";
 		}
 	},
 

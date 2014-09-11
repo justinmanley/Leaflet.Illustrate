@@ -26,6 +26,24 @@ describe("L.Illustrate.Textbox", function() {
 			expect(textbox).to.have.property("_minSize");
 			expect(textbox._minSize).to.be.an.instanceof(L.Point);
 		});
+
+		it("Should set the size of the textbox when provided as an option", function() {
+			var center = new L.LatLng(41.79187262698525, -87.60107517242432),
+				size = new L.Point(240, 155),
+				options = { size: size },
+				textbox = new L.Illustrate.Textbox(center, options).addTo(map);
+
+			expect(textbox.getSize()).to.equal(size);
+		});
+
+		it("Should set the rotation of the textbox when provided as an option", function() {
+			var center = new L.LatLng(41.79187262698525, -87.60107517242432),
+				rotation = Math.PI/2,
+				options = { rotation: rotation },
+				textbox = new L.Illustrate.Textbox(center, options).addTo(map);
+
+			expect(textbox.getRotation()).to.equal(rotation);
+		});
 	});
 
 	describe("#onAdd", function() {
