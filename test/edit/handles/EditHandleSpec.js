@@ -20,6 +20,22 @@ describe("L.Illustrate.EditHandle", function() {
 		textbox.addTo(map);
 	});
 
+	describe("L.Illustrate.MoveHandle", function() {
+		describe("#_onHandleDrag", function() {
+			it("Should update the latlng of the textbox", function() {
+				var newLatLng = new L.LatLng(2, 4),
+					moveHandle;
+
+				textbox.editing.enable();
+
+				moveHandle = textbox.editing._moveHandle;
+				moveHandle.setLatLng(newLatLng);
+				moveHandle._onHandleDrag({ target: moveHandle });
+				expect(textbox.getLatLng()).to.deep.equal(newLatLng);
+			});
+		});
+	});
+
 	describe("L.Illustrate.ResizeHandle", function() {
 		var resizeHandle;
 
@@ -38,6 +54,21 @@ describe("L.Illustrate.EditHandle", function() {
 
 		afterEach(function() {
 			updateHandle.restore();
+		});
+
+		describe("#_onHandleDrag", function() {
+			it("Should not change the textbox dimensions when called with initial latlng.", function() {
+				var size = textbox.getSize(),
+					handle;
+
+				textbox.editing.enable();
+
+				handle = textbox.editing._resizeHandles[0];
+				handle._onHandleDrag({ target: handle });
+
+				/* textbox.getSize() is equal to 2*this._minSize */
+				expect(textbox.getSize()).to.be.closeToPoint(size);
+			});
 		});
 
 		describe("#_calculateRotation", function() {
@@ -145,7 +176,7 @@ describe("L.Illustrate.EditHandle", function() {
 			expect(rotateHandle._pointer._map).to.be.an.instanceOf(L.Map);
 		});
 
-		it("When rotation = 0, rotate handle has correct endpoints.", function() {
+		it("When rotation = 0, rotate pointer has correct endpoints.", function() {
 			var	midpoint = rotateHandle._textboxCoordsToLatLng(new L.Point(0, -Math.round(textbox.getSize().y/2))),
 				pointerLatLngs = rotateHandle._pointer._getLatLngs();
 
@@ -153,7 +184,7 @@ describe("L.Illustrate.EditHandle", function() {
 			expect(pointerLatLngs[1]).to.be.closeToLatLng(rotateHandle.getLatLng(), 0.001);
 		});
 
-		it("When rotation is nonzero, rotate handle has correct endpoints.", function() {
+		it("When rotation is nonzero, rotate pointer has correct endpoints.", function() {
 			textbox.setRotation(Math.PI/4);
 
 			var	midpoint = rotateHandle._textboxCoordsToLatLng(new L.Point(0, -Math.round(textbox.getSize().y/2))),

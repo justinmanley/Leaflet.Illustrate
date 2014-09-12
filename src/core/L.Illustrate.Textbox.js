@@ -31,7 +31,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		L.RotatableMarker.prototype.onAdd.call(this, map);
 
 		this.setContent(this._textContent);
-		this._updateCenter();
+		this.setLatLng(this._latlng);
 		this._updateSize();
 
 		/* Enable typing, text selection, etc. */
@@ -61,18 +61,6 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		L.RotatableMarker.prototype.onRemove.call(this, map);
 	},
 
-	setCenter: function(latlng) {
-		this._latlng = latlng;
-
-		this._updateCenter();
-		this.fire('update');
-
-		return this;
-	},
-
-	getLatLng: function() {
-		return this._latlng;
-	},
 
 	getSize: function() {
 		return this._size;
@@ -91,14 +79,8 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		if (this._map) {
 			this._updateSize();
 		}
-		this.fire('update');
+		this.fire('resize', { size: this._size });
 
-		return this;
-	},
-
-	setRotation: function(theta) {
-		L.RotatableMarker.prototype.setRotation.call(this, theta);
-		this.fire('update');
 		return this;
 	},
 
@@ -143,9 +125,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	/* When user leaves the textarea, fire a 'draw:edited' event if they changed anything. */
 	_onTextEdit: function() {
 		if (this._text_edited) {
-			this._map.fire('draw:edited', {
-				layers: new L.LayerGroup().addLayer(this)
-			});
+			this.fire('textedit', { textContent: this.getContent() });
 			this._text_edited = false;
 		}
 	},

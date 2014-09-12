@@ -67,6 +67,15 @@ describe("L.Illustrate.Textbox", function() {
 		});
 	});
 
+	describe("#getLatLng", function() {
+		it("Should return the new value after center is updated using #setLatLng", function() {
+			var	newLatLng = new L.LatLng(2, 4);
+
+			textbox.setLatLng(newLatLng);
+			expect(textbox.getLatLng()).to.deep.equal(newLatLng);
+		});
+	});
+
 	describe("#getContent", function() {
 		it("Should return the empty string for a new textbox with no default value.", function() {
 			expect(textbox.getContent()).to.equal('');

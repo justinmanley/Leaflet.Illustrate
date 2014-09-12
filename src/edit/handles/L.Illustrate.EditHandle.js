@@ -11,18 +11,25 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	initialize: function(shape, options) {
+		L.setOptions(this, options);
+
 		this._handleOffset = new L.Point(options.offset.x || 0, options.offset.y || 0);
 		this._handled = shape;
 
 		var latlng = this._handled._map.layerPointToLatLng(this._textboxCoordsToLayerPoint(
 				this._handleOffset
-			));
+			)),
+			markerOptions = {
+				draggable: true,
+				icon: this.options.resizeIcon,
+				zIndexOffset: 10
+			};
 
-		L.RotatableMarker.prototype.initialize.call(this, latlng, {
-			draggable: true,
-			icon: this.options.resizeIcon,
-			zIndexOffset: 10
-		});
+		if (this._handled.getRotation) {
+			markerOptions.rotation = this._handled.getRotation();
+		}
+
+		L.RotatableMarker.prototype.initialize.call(this, latlng, markerOptions);
 	},
 
 	onAdd: function(map) {
@@ -74,7 +81,10 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		}, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('update', this.updateHandle, this);
+
+		this._handled.on('rotate', this.updateHandle, this);
+		this._handled.on('resize', this.updateHandle, this);
+		this._handled.on('move', this.updateHandle, this);
 	},
 
 	_unbindListeners: function() {

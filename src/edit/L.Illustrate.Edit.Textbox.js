@@ -9,6 +9,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._map = this._shape._map;
 
 			this._initHandles();
+			this._initEvents();
 		}
 	},
 
@@ -30,6 +31,15 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._addRotateHandle();
 			this._addResizeHandles();
 			this._addMoveHandle();
+		}
+	},
+
+	_initEvents: function() {
+		var fireEdit = function() { this._shape.fire('edit'); },
+			changeEvents = [ 'resize', 'rotate', 'textedit', 'move' ];
+
+		for (var i = 0; i < changeEvents.length; i++) {
+			this._shape.on(changeEvents[i], fireEdit, this);
 		}
 	},
 

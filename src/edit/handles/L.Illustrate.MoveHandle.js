@@ -6,6 +6,6 @@ L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 	_onHandleDrag: function(event) {
 		var handle = event.target;
 
-		this._handled.setCenter(handle.getLatLng());
+		this._handled.setLatLng(handle.getLatLng());
 	}
 });

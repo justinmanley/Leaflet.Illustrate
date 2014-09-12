@@ -50,11 +50,8 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 			weight: Math.round(this._handled.options.borderWidth)
 		};
 
-		this._pointerStart = this._handleOffset.multiplyBy(0.5);
-		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [
-			this._pointerStart,
-			this._handleOffset
-		], options);
+		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [], options);
+		this._updatePointer();
 
 		this._handled.on({ 'update': this._updatePointer }, this);
 	},

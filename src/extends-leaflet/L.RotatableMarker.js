@@ -6,7 +6,11 @@ L.RotatableMarker = L.Marker.extend({
 
 	setRotation: function(theta) {
 		this._rotation = theta;
+		
 		this.update();
+		this.fire('rotate', { rotation: this._rotation });
+
+		return this;
 	},
 
 	getRotation: function() {

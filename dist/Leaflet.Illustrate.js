@@ -55,7 +55,11 @@ L.RotatableMarker = L.Marker.extend({
 
 	setRotation: function(theta) {
 		this._rotation = theta;
+		
 		this.update();
+		this.fire('rotate', { rotation: this._rotation });
+
+		return this;
 	},
 
 	getRotation: function() {
@@ -350,7 +354,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		L.RotatableMarker.prototype.onAdd.call(this, map);
 
 		this.setContent(this._textContent);
-		this._updateCenter();
+		this.setLatLng(this._latlng);
 		this._updateSize();
 
 		/* Enable typing, text selection, etc. */
@@ -380,18 +384,6 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		L.RotatableMarker.prototype.onRemove.call(this, map);
 	},
 
-	setCenter: function(latlng) {
-		this._latlng = latlng;
-
-		this._updateCenter();
-		this.fire('update');
-
-		return this;
-	},
-
-	getLatLng: function() {
-		return this._latlng;
-	},
 
 	getSize: function() {
 		return this._size;
@@ -410,14 +402,8 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		if (this._map) {
 			this._updateSize();
 		}
-		this.fire('update');
+		this.fire('resize', { size: this._size });
 
-		return this;
-	},
-
-	setRotation: function(theta) {
-		L.RotatableMarker.prototype.setRotation.call(this, theta);
-		this.fire('update');
 		return this;
 	},
 
@@ -462,9 +448,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	/* When user leaves the textarea, fire a 'draw:edited' event if they changed anything. */
 	_onTextEdit: function() {
 		if (this._text_edited) {
-			this._map.fire('draw:edited', {
-				layers: new L.LayerGroup().addLayer(this)
-			});
+			this.fire('textedit', { textContent: this.getContent() });
 			this._text_edited = false;
 		}
 	},
@@ -797,18 +781,25 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 	},
 
 	initialize: function(shape, options) {
+		L.setOptions(this, options);
+
 		this._handleOffset = new L.Point(options.offset.x || 0, options.offset.y || 0);
 		this._handled = shape;
 
 		var latlng = this._handled._map.layerPointToLatLng(this._textboxCoordsToLayerPoint(
 				this._handleOffset
-			));
+			)),
+			markerOptions = {
+				draggable: true,
+				icon: this.options.resizeIcon,
+				zIndexOffset: 10
+			};
 
-		L.RotatableMarker.prototype.initialize.call(this, latlng, {
-			draggable: true,
-			icon: this.options.resizeIcon,
-			zIndexOffset: 10
-		});
+		if (this._handled.getRotation) {
+			markerOptions.rotation = this._handled.getRotation();
+		}
+
+		L.RotatableMarker.prototype.initialize.call(this, latlng, markerOptions);
 	},
 
 	onAdd: function(map) {
@@ -860,7 +851,10 @@ L.Illustrate.EditHandle = L.RotatableMarker.extend({
 		}, this);
 
 		this._handled._map.on('zoomend', this.updateHandle, this);
-		this._handled.on('update', this.updateHandle, this);
+
+		this._handled.on('rotate', this.updateHandle, this);
+		this._handled.on('resize', this.updateHandle, this);
+		this._handled.on('move', this.updateHandle, this);
 	},
 
 	_unbindListeners: function() {
@@ -942,7 +936,7 @@ L.Illustrate.MoveHandle = L.Illustrate.EditHandle.extend({
 	_onHandleDrag: function(event) {
 		var handle = event.target;
 
-		this._handled.setCenter(handle.getLatLng());
+		this._handled.setLatLng(handle.getLatLng());
 	}
 });
 L.Illustrate.PointerHandle = L.Illustrate.EditHandle.extend({
@@ -1151,11 +1145,8 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 			weight: Math.round(this._handled.options.borderWidth)
 		};
 
-		this._pointerStart = this._handleOffset.multiplyBy(0.5);
-		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [
-			this._pointerStart,
-			this._handleOffset
-		], options);
+		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [], options);
+		this._updatePointer();
 
 		this._handled.on({ 'update': this._updatePointer }, this);
 	},
@@ -1363,6 +1354,7 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._map = this._shape._map;
 
 			this._initHandles();
+			this._initEvents();
 		}
 	},
 
@@ -1384,6 +1376,15 @@ L.Illustrate.Edit.Textbox = L.Edit.SimpleShape.extend({
 			this._addRotateHandle();
 			this._addResizeHandles();
 			this._addMoveHandle();
+		}
+	},
+
+	_initEvents: function() {
+		var fireEdit = function() { this._shape.fire('edit'); },
+			changeEvents = [ 'resize', 'rotate', 'textedit', 'move' ];
+
+		for (var i = 0; i < changeEvents.length; i++) {
+			this._shape.on(changeEvents[i], fireEdit, this);
 		}
 	},
 
