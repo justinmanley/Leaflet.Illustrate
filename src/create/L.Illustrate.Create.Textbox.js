@@ -7,6 +7,7 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		/* Set dynamically using this._setShapeOptions() */
 		shapeOptions: {},
 
+		/* Change these to match your CSS textbox styles. */
 		textOptions: {
 			borderColor: '#4387fd',
 			borderWidth: 2

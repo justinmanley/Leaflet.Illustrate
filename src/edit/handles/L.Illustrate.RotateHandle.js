@@ -45,10 +45,13 @@ L.Illustrate.RotateHandle = L.Illustrate.EditHandle.extend({
 	},
 
 	_createPointer: function() {
-		var options = {
-			color: this._handled.options.borderColor,
-			weight: Math.round(this._handled.options.borderWidth)
-		};
+		var textarea = this._handled.getTextarea(),
+			borderWidth = L.DomUtil.getStyle(textarea, 'border-width'),
+			borderColor = L.DomUtil.getStyle(textarea, 'border-color'),
+			options = {
+				color: borderColor,
+				weight: Math.round(borderWidth)
+			};
 
 		this._pointer = new L.Illustrate.Pointer(this._handled.getLatLng(), [], options);
 		this._updatePointer();
