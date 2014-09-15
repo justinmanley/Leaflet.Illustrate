@@ -13,15 +13,18 @@ describe("L.Illustrate.Pointer", function() {
 	});
 
 	describe("#_fireCreatedEvent", function() {
-		it.skip("Returns an instance of L.Illustrate.Pointer", function(done) {
+		it("Returns an instance of L.Illustrate.Pointer", function(done) {
+			create._currentLatLng = new L.LatLng(0, 0);
 			create.addVertex(new L.LatLng(40, -90));
 
-			create._fireCreatedEvent();
+			map.on('draw:created', function(event) {
+				var layer = event.layer;
 
-			map.on('draw:created', function(evt) {
-				expect(evt.layer).to.be.an.instanceOf(L.Illustrate.Pointer);
+				expect(layer).to.be.an.instanceof(L.Illustrate.Pointer);
 				done();
 			});
+
+			create._fireCreatedEvent();
 		});
 	});
 });

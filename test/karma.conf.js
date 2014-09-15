@@ -17,7 +17,7 @@ module.exports = function(config) {
     files: [
       '../node_modules/leaflet/dist/leaflet-src.js',
       '../node_modules/leaflet/dist/leaflet.css',
-      '../node_modules/leaflet-draw/dist/leaflet.draw.js',
+      '../node_modules/leaflet-draw/dist/leaflet.draw-src.js',
       '../node_modules/leaflet-draw/dist/leaflet.draw.css',
       '../node_modules/chai/chai.js',
       '../node_modules/sinon/pkg/sinon-1.10.3.js',
