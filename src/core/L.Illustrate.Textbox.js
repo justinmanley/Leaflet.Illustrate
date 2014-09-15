@@ -42,7 +42,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 			this.getTextarea().setAttribute('readonly', 'readonly');
 		}
 
-		L.DomUtil.addClass(this.getTextarea(), 'leaflet-illustrate-textbox-outlined');
+		this._addClasses();
 	},
 
 	addTo: function(map) {
@@ -122,7 +122,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		}
 	},
 
-	/* When user leaves the textarea, fire a 'draw:edited' event if they changed anything. */
+	/* When user leaves the textarea, fire a 'textedit' event if they changed anything. */
 	_onTextEdit: function() {
 		if (this._text_edited) {
 			this.fire('textedit', { textContent: this.getContent() });
@@ -142,6 +142,9 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 		L.DomEvent.on(textarea, 'click', function(event) {
 			event.target.focus();
+		}, this);
+
+		L.DomEvent.on(textarea, 'mouseover', function() {
 			map.dragging.disable();
 			this._selecting.enable();
 		}, this);
@@ -151,13 +154,22 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 			this._selecting.disable();
 		}, this);
 
-		/* Fire 'draw:edited' event when text content changes. */
 		L.DomEvent.on(textarea, 'change', onTextChange, this);
 		L.DomEvent.on(textarea, 'keyup', onTextChange, this);
 		L.DomEvent.on(textarea, 'paste', onTextChange, this);
 
 		L.DomEvent.on(textarea, 'blur', this._onTextEdit, this);
 	},
+
+	_addClasses: function() {
+		var container = this._icon;
+
+		if (typeof this.options.className === 'string') {
+			L.Domutil.addClass(container, this.options.className);
+		}
+
+		L.DomUtil.addClass(this.getTextarea(), 'leaflet-illustrate-textbox-outlined');
+	}
 
 });
 
