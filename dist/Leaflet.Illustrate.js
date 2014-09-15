@@ -364,7 +364,6 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 		/* Enable typing, text selection, etc. */
 		this._enableTyping();
-		textarea.focus();
 
 		/* Disable the textarea if the textbox content should not be editable. */
 		if (!this.options.textEditable) {
