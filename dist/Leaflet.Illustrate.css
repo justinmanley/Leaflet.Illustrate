@@ -4,22 +4,18 @@
   overflow: hidden;
   padding: 3px;
   resize: none;
+  border: 2px solid rgba(0, 0, 0, 0);
   background-color: rgba(0, 0, 0, 0);
   font-size: 14pt;
   color: #ededed;
   text-shadow: 0 0 0.2em #212121, 0 0 0.2em #212121, 0 0 0.2em #212121;
 }
 .leaflet-illustrate-textbox:focus {
+  border: 2px solid #4387fd;
   outline-color: rgba(0, 0, 0, 0);
 }
-.leaflet-illustrate-textbox-outlined {
-  border: 2px solid #4387fd;
-}
-.leaflet-illustrate-textbox-hidden {
-  border-width: 0px;
-}
 .leaflet-illustrate-textbox-empty {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.6);
 }
 .leaflet-illustrate-textbox-container {
   background-color: rgba(0, 0, 0, 0);

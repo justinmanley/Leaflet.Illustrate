@@ -364,6 +364,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 		/* Enable typing, text selection, etc. */
 		this._enableTyping();
+		textarea.focus();
 
 		/* Disable the textarea if the textbox content should not be editable. */
 		if (!this.options.textEditable) {
@@ -512,7 +513,6 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	_addClasses: function() {
 		var textarea = this.getTextarea();
 
-		L.DomUtil.addClass(textarea, 'leaflet-illustrate-textbox-outlined');
 		L.DomUtil.addClass(textarea, 'leaflet-illustrate-textbox');
 
 		if (this.options.className) {
