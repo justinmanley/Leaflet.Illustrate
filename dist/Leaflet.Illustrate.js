@@ -337,7 +337,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 	initialize: function(latlng, options) {
 		options.icon = new L.DivIcon({
-			className: 'leaflet-illustrate-textbox',
+			className: 'leaflet-illustrate-textbox-container',
 			html: '<textarea style="width: 100%; height: 100%">' + this.options.textContent + '</textarea>',
 			iconAnchor: new L.Point(0, 0)
 		});
@@ -485,13 +485,14 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	},
 
 	_addClasses: function() {
-		var container = this._icon;
+		var textarea = this.getTextarea();
 
-		if (typeof this.options.className === 'string') {
-			L.Domutil.addClass(container, this.options.className);
+		L.DomUtil.addClass(textarea, 'leaflet-illustrate-textbox-outlined');
+		L.DomUtil.addClass(textarea, 'leaflet-illustrate-textbox');
+
+		if (this.options.className) {
+			L.Domutil.addClass(textarea, this.options.className);
 		}
-
-		L.DomUtil.addClass(this.getTextarea(), 'leaflet-illustrate-textbox-outlined');
 	}
 
 });

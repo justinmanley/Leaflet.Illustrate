@@ -34,3 +34,4 @@
 * Change the font to make it more readable.  Add halo to text.  Good advice in this article:
 	http://mappingcenter.esri.com/index.cfm?fa=ask.answers&q=1181
 	https://www.google.com/earth/outreach/tutorials/user_experience.html
+	https://www.mapbox.com/blog/designing-labels-satellite-imagery/
