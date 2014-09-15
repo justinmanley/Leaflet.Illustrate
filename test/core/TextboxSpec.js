@@ -154,7 +154,6 @@ describe("L.Illustrate.Textbox", function() {
 					'coordinates': [-87.60107517242432, 41.79187262698525]
 				},
 				'properties': {
-					'annotationType': 'textbox',
 					'textContent': '',
 					'style': {
 						width: 240,
