@@ -15,6 +15,9 @@
 }
 .leaflet-illustrate-textbox-outlined { border: 2px solid #4387fd; }
 .leaflet-illustrate-textbox-hidden { border-width: 0px; }
+.leaflet-illustrate-textbox-empty { 
+	background-color: rgba(0,0,0,0.2);
+}
 .leaflet-illustrate-textbox-container { background-color: rgba(0,0,0,0); }
 
 /* Toolbar */
@@ -48,5 +51,7 @@
 .label-text(@color) {
 	font-size: 14pt;
 	color: @color;
-	text-shadow: 0 0 0.2em darken(@color, 80%), 0 0 0.2em darken(@color, 80%);
+	text-shadow: 0 0 0.2em darken(@color, 80%),
+			     0 0 0.2em darken(@color, 80%),
+				 0 0 0.2em darken(@color, 80%);
 }

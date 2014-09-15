@@ -7,7 +7,7 @@
   background-color: rgba(0, 0, 0, 0);
   font-size: 14pt;
   color: #ededed;
-  text-shadow: 0 0 0.2em #212121, 0 0 0.2em #212121;
+  text-shadow: 0 0 0.2em #212121, 0 0 0.2em #212121, 0 0 0.2em #212121;
 }
 .leaflet-illustrate-textbox:focus {
   outline-color: rgba(0, 0, 0, 0);
@@ -17,6 +17,9 @@
 }
 .leaflet-illustrate-textbox-hidden {
   border-width: 0px;
+}
+.leaflet-illustrate-textbox-empty {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 .leaflet-illustrate-textbox-container {
   background-color: rgba(0, 0, 0, 0);

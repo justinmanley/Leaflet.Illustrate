@@ -323,7 +323,8 @@ L.Illustrate.Pointer = L.Illustrate.Pointer.extend({
 });
 L.Illustrate.Textbox = L.RotatableMarker.extend({
 	statics: {
-		TYPE: 'textbox'
+		TYPE: 'textbox',
+		TEXTEDIT_EVENTS: [ 'change', 'keyup', 'paste', 'cut' ]
 	},
 
 	includes: [L.Mixin.Events],
@@ -351,7 +352,11 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	},
 
 	onAdd: function(map) {
+		var textarea, editevent;
+
 		L.RotatableMarker.prototype.onAdd.call(this, map);
+
+		textarea = this.getTextarea();
 
 		this.setContent(this._textContent);
 		this.setLatLng(this._latlng);
@@ -362,10 +367,17 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 		/* Disable the textarea if the textbox content should not be editable. */
 		if (!this.options.textEditable) {
-			this.getTextarea().setAttribute('readonly', 'readonly');
+			textarea.setAttribute('readonly', 'readonly');
 		}
 
 		this._addClasses();
+
+		for (var i = 0; i < L.Illustrate.Textbox.TEXTEDIT_EVENTS.length; i++) {
+			editevent = L.Illustrate.Textbox.TEXTEDIT_EVENTS[i];
+			L.DomEvent.on(textarea, editevent, this._showIfEmpty, this);
+		}
+
+		this._showIfEmpty({ target: textarea });
 	},
 
 	addTo: function(map) {
@@ -445,7 +457,6 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 		}
 	},
 
-	/* When user leaves the textarea, fire a 'textedit' event if they changed anything. */
 	_onTextEdit: function() {
 		if (this._text_edited) {
 			this.fire('textedit', { textContent: this.getContent() });
@@ -458,7 +469,8 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 			textarea = this.getTextarea(),
 			onTextChange = function() {
 				this._text_edited = true;
-			};
+			},
+			editevent;
 
 		/* Enable text selection and editing. */
 		this._selecting = new L.Illustrate.Selectable(textarea);
@@ -477,11 +489,24 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 			this._selecting.disable();
 		}, this);
 
-		L.DomEvent.on(textarea, 'change', onTextChange, this);
-		L.DomEvent.on(textarea, 'keyup', onTextChange, this);
-		L.DomEvent.on(textarea, 'paste', onTextChange, this);
+		/* When user leaves the textarea, fire a 'textedit' event if they changed anything. */
+		for (var i = 0; i < L.Illustrate.Textbox.TEXTEDIT_EVENTS.length; i++) {
+			editevent = L.Illustrate.Textbox.TEXTEDIT_EVENTS[i];
+			L.DomEvent.on(textarea, editevent, onTextChange, this);
+		}
 
 		L.DomEvent.on(textarea, 'blur', this._onTextEdit, this);
+	},
+
+	_showIfEmpty: function(event) {
+		var textarea = event.target,
+			text = textarea.value;
+
+		if (text === '') {
+			L.DomUtil.addClass(textarea, 'leaflet-illustrate-textbox-empty');
+		} else {
+			L.DomUtil.removeClass(textarea, 'leaflet-illustrate-textbox-empty');
+		}
 	},
 
 	_addClasses: function() {
