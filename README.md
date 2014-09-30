@@ -36,3 +36,7 @@ To set up, install [Node.js](http://nodejs.org/).  If you don't have it already,
 You can have Grunt watch the repository and continuously rebuild the project as you make changes by running `grunt` before you start working.  
 
 Tests are run with the command `grunt test`.  Please ensure that your contributions pass all tests before you submit a pull request.
+
+License
+-----
+Released under the MIT license.  [See the LICENSE](https://github.com/manleyjster/Leaflet.Illustrate/blob/master/LICENSE).
