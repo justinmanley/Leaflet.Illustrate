@@ -1,7 +1,12 @@
 L.RotatableMarker = L.Marker.extend({
+
+	options: {
+		rotation: 0
+	},
+
 	initialize: function(latlng, options) {
 		L.Marker.prototype.initialize.call(this, latlng, options);
-		this.setRotation(options.rotation || 0);
+		this.setRotation(this.options.rotation);
 	},
 
 	setRotation: function(theta) {
@@ -29,3 +34,7 @@ L.RotatableMarker = L.Marker.extend({
 		this._resetZIndex();
 	}
 });
+
+L.rotatableMarker = function(latlng, options) {
+	return new L.RotatableMarker(latlng, options);
+};

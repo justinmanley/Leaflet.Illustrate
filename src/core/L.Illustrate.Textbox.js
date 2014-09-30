@@ -219,6 +219,10 @@ L.Illustrate.Textbox.prototype.toGeoJSON = function() {
 	return feature;
 };
 
+L.Illustrate.textbox = function(latlng, options) {
+	return new L.Illustrate.Textbox(latlng, options);
+};
+
 L.Illustrate.Selectable = L.Handler.extend({
 
 	includes: [L.Mixin.Events],

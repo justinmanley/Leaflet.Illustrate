@@ -48,9 +48,14 @@ if (L.Point) {
 	};
 }
 L.RotatableMarker = L.Marker.extend({
+
+	options: {
+		rotation: 0
+	},
+
 	initialize: function(latlng, options) {
 		L.Marker.prototype.initialize.call(this, latlng, options);
-		this.setRotation(options.rotation || 0);
+		this.setRotation(this.options.rotation);
 	},
 
 	setRotation: function(theta) {
@@ -78,6 +83,10 @@ L.RotatableMarker = L.Marker.extend({
 		this._resetZIndex();
 	}
 });
+
+L.rotatableMarker = function(latlng, options) {
+	return new L.RotatableMarker(latlng, options);
+};
 L.Illustrate.Pointer = L.Path.extend({
 
 	options: {
@@ -540,6 +549,10 @@ L.Illustrate.Textbox.prototype.toGeoJSON = function() {
 	feature.properties = properties;
 
 	return feature;
+};
+
+L.Illustrate.textbox = function(latlng, options) {
+	return new L.Illustrate.Textbox(latlng, options);
 };
 
 L.Illustrate.Selectable = L.Handler.extend({
