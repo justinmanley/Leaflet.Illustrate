@@ -1,6 +1,9 @@
 {
   "name": "leaflet.illustrate",
-  "main": "dist/Leaflet.Illustrate.js",
+  "main": [
+    "dist/Leaflet.Illustrate.js",
+    "dist/Leaflet.Illustrate.css",
+    "dist/images/spritesheet.png"],
   "version": "0.2.0",
   "homepage": "https://github.com/manleyjster/Leaflet.Illustrate",
   "authors": [
@@ -15,7 +18,8 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "Gruntfile.js"
   ],
   "keywords": [
     "maps",
