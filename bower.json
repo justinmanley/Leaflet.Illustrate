@@ -16,5 +16,20 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "keywords": [
+    "maps",
+    "leaflet",
+    "client",
+    "annotate",
+    "illustrate",
+    "draw"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manleyjster/Leaflet.Illustrate.git"
+  },
+  "dependencies": {
+    "leaflet-draw": "~2.3.0"
+  }
 }
