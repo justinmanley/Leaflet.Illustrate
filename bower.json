@@ -3,8 +3,9 @@
   "main": [
     "dist/Leaflet.Illustrate.js",
     "dist/Leaflet.Illustrate.css",
-    "dist/images/spritesheet.png"],
-  "version": "0.2.0",
+    "dist/images/spritesheet.png"
+  ],
+  "version": "0.0.2",
   "homepage": "https://github.com/manleyjster/Leaflet.Illustrate",
   "authors": [
     "Justin Manley"
