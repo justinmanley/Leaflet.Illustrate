@@ -1,5 +1,5 @@
 {
-  "name": "leaflet.illustrate",
+  "name": "leaflet-illustrate",
   "main": [
     "dist/Leaflet.Illustrate.js",
     "dist/Leaflet.Illustrate.css",
