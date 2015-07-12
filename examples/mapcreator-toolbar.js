@@ -2,7 +2,7 @@ var MapCreator = MapCreator || {};
 
 MapCreator.Toolbar = L.Toolbar.extend({
 	statics: {
-		TYPE: 'illustrate'
+		TYPE: 'mapcreator'
 	},
 
 	options: {
@@ -19,7 +19,7 @@ MapCreator.Toolbar = L.Toolbar.extend({
 			}
 		}
 
-		this._toolbarClass = 'leaflet-illustrate-create';
+		this._toolbarClass = 'mapcreator-draw';
 		L.Toolbar.prototype.initialize.call(this, options);
 	},
 
