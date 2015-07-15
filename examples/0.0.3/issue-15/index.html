@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../../../resources/leaflet/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="../../../resources/leaflet-draw/leaflet.draw.css" />
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type="text/css" href="../leaflet-illustrate/Leaflet.Illustrate.css" />
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="../../../resources/leaflet/leaflet-src.js"></script>
+    <script src="../../../resources/leaflet-draw/leaflet.draw-src.js"></script>
+	<script src="../leaflet-illustrate/Leaflet.Illustrate.js"></script>
+    <script src="./mapcreator-toolbar.js"></script>
+    <style>
+		html, body, #map { margin: 0; height: 100%; width: 100%; }
+
+        .leaflet-draw-toolbar .mapcreator-draw-textbox {
+            background-position: -272px -2px;
+        }
+
+        .leaflet-draw-toolbar .mapcreator-draw-polyline {
+                background-position: -2px -2px;
+        }
+
+        .leaflet-draw-toolbar .mapcreator-draw-polygon {
+                background-position: -31px -2px;
+        }
+
+        .leaflet-draw-toolbar .mapcreator-draw-rectangle {
+                background-position: -62px -2px;
+        }
+
+        .leaflet-draw-toolbar .mapcreator-draw-circle {
+                background-position: -92px -2px;
+        }
+
+        .leaflet-draw-toolbar .mapcreator-draw-marker {
+                background-position: -122px -2px;
+        }
+    </style>
+</head>
+<body>
+	<div id="map"></div>
+	<script>
+		var map = L.map('map').setView([41.7896,-87.5996], 15);
+		L.tileLayer("http://otile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
+			attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; Portions Courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency'
+		}).addTo(map);
+
+		var drawnItems = new L.FeatureGroup();
+		map.addLayer(drawnItems);
+
+		new MapCreator.Control({
+			edit: { featureGroup: drawnItems }
+		}).addTo(map);
+
+		map.on('draw:created', function(evt) {
+			var type = evt.layerType,
+				layer = evt.layer;
+
+			drawnItems.addLayer(layer);
+		});
+	</script>
+</body>
+</html>
