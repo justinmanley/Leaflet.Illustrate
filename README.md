@@ -16,16 +16,16 @@ MapKnitter is open-source software created and run by the [Public Lab for Open T
 Check it out
 ------------
 
-The latest demo is live at [Leaflet.Illustrate/examples/0.0.2/simple/](http://manleyjster.github.io/Leaflet.Illustrate/examples/0.0.2/simple/).  Give it a try!
+The latest demo is live at [Leaflet.Illustrate/examples/0.0.2/simple/](http://justinmanley.github.io/Leaflet.Illustrate/examples/0.0.2/simple/).  Give it a try!
 
 Usage
 -----
 
-Leaflet.Illustrate defines two new types of annotations: [textboxes](https://github.com/manleyjster/Leaflet.Illustrate/wiki/L.Illustrate.Textbox), and pointers.
+Leaflet.Illustrate defines two new types of annotations: [textboxes](https://github.com/justinmanley/Leaflet.Illustrate/wiki/L.Illustrate.Textbox), and pointers.
 
 Users can create and edit textbox and pointer annotations using a Leaflet.draw-style toolbar.  Leaflet.Illustrate is built on top of Leaflet.draw, so it also easy to use Leaflet.Illustrate annotations alongside Leaflet.draw geometric annotations.
 
-This plugin is documented more fully in the [wiki](https://github.com/manleyjster/Leaflet.Illustrate/wiki).
+This plugin is documented more fully in the [wiki](https://github.com/justinmanley/Leaflet.Illustrate/wiki).
 
 Contributing
 -----
@@ -39,4 +39,4 @@ Tests are run with the command `grunt test`.  Please ensure that your contributi
 
 License
 -----
-Released under the MIT license.  [See the LICENSE](https://github.com/manleyjster/Leaflet.Illustrate/blob/master/LICENSE).
+Released under the MIT license.  [See the LICENSE](https://github.com/justinmanley/Leaflet.Illustrate/blob/master/LICENSE).
