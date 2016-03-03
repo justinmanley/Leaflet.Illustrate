@@ -1,7 +1,7 @@
 Leaflet.Illustrate
 ==================
 
-[![Build Status](https://travis-ci.org/manleyjster/Leaflet.Illustrate.svg?branch=master)](https://travis-ci.org/manleyjster/Leaflet.Illustrate)
+[![Build Status](https://travis-ci.org/justinmanley/Leaflet.Illustrate.svg?branch=master)](https://travis-ci.org/justinmanley/Leaflet.Illustrate)
 [![Coverage Status](https://img.shields.io/coveralls/manleyjster/Leaflet.Illustrate.svg)](https://coveralls.io/r/manleyjster/Leaflet.Illustrate)
 [![NPM Version](http://img.shields.io/npm/v/leaflet-illustrate.svg)](https://www.npmjs.org/package/leaflet-illustrate)
 
