@@ -1,9 +1,8 @@
 Leaflet.Illustrate
 ==================
 
-[![Build Status](https://travis-ci.org/manleyjster/Leaflet.Illustrate.svg?branch=master)](https://travis-ci.org/manleyjster/Leaflet.Illustrate)
-[![Coverage Status](https://img.shields.io/coveralls/manleyjster/Leaflet.Illustrate.svg)](https://coveralls.io/r/manleyjster/Leaflet.Illustrate)
-[![NPM Version](http://img.shields.io/npm/v/leaflet-illustrate.svg)](https://www.npmjs.org/package/leaflet-illustrate)
+[![Build Status](https://travis-ci.org/justinmanley/Leaflet.Illustrate.svg?branch=master)](https://travis-ci.org/justinmanley/Leaflet.Illustrate)
+[![Coverage Status](https://coveralls.io/repos/github/justinmanley/Leaflet.Illustrate/badge.svg?branch=master)](https://coveralls.io/github/justinmanley/Leaflet.Illustrate?branch=master)
 
 Rich annotation plugin (drawing, text, and more) for Leaflet extending Leaflet.draw.  Designed to help people tell the story behind the maps that they create.
 
@@ -16,16 +15,16 @@ MapKnitter is open-source software created and run by the [Public Lab for Open T
 Check it out
 ------------
 
-The latest demo is live at [Leaflet.Illustrate/examples/0.0.2/simple/](http://manleyjster.github.io/Leaflet.Illustrate/examples/0.0.2/simple/).  Give it a try!
+The latest demo is live at [Leaflet.Illustrate/examples/0.0.2/simple/](http://justinmanley.github.io/Leaflet.Illustrate/examples/0.0.2/simple/).  Give it a try!
 
 Usage
 -----
 
-Leaflet.Illustrate defines two new types of annotations: [textboxes](https://github.com/manleyjster/Leaflet.Illustrate/wiki/L.Illustrate.Textbox), and pointers.
+Leaflet.Illustrate defines two new types of annotations: [textboxes](https://github.com/justinmanley/Leaflet.Illustrate/wiki/L.Illustrate.Textbox), and pointers.
 
 Users can create and edit textbox and pointer annotations using a Leaflet.draw-style toolbar.  Leaflet.Illustrate is built on top of Leaflet.draw, so it also easy to use Leaflet.Illustrate annotations alongside Leaflet.draw geometric annotations.
 
-This plugin is documented more fully in the [wiki](https://github.com/manleyjster/Leaflet.Illustrate/wiki).
+This plugin is documented more fully in the [wiki](https://github.com/justinmanley/Leaflet.Illustrate/wiki).
 
 Contributing
 -----
@@ -39,4 +38,4 @@ Tests are run with the command `grunt test`.  Please ensure that your contributi
 
 License
 -----
-Released under the MIT license.  [See the LICENSE](https://github.com/manleyjster/Leaflet.Illustrate/blob/master/LICENSE).
+Released under the MIT license.  [See the LICENSE](https://github.com/justinmanley/Leaflet.Illustrate/blob/master/LICENSE).
