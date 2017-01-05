@@ -1,3 +1,9 @@
+// TO DO: Mirar función initialize de L.Illustrate.Create.Textbox -> línea 620
+
+//var textboxTooltipTxt = "Presioná y luego arrastrá para dibujar un rectángulo de texto";
+//var textboxTitle= "Agregá texto";
+
+
 (function(window, document, undefined) {
 
 "use strict";
@@ -346,11 +352,14 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 	},
 
 	initialize: function(latlng, options) {
+
+		
 		options.icon = new L.DivIcon({
 			className: 'leaflet-illustrate-textbox-container',
 			html: '<textarea style="width: 100%; height: 100%">' + this.options.textContent + '</textarea>',
 			iconAnchor: new L.Point(0, 0)
 		});
+
 
 		L.RotatableMarker.prototype.initialize.call(this, latlng, options);
 
@@ -627,7 +636,8 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		textOptions: {
 			borderColor: '#4387fd',
 			borderWidth: 2
-		}
+		},
+		textboxTooltipEnd: "Presioná y luego arrastrá para dibujar un rectángulo de texto"
 	},
 
 	initialize: function(map, options) {
@@ -639,7 +649,13 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 		 * Implement drawing using L.Draw.Rectangle so that a textbox can be drawn in any direction,
 		 * then return a L.Illustrate.Textbox instance once drawing is complete.
 		 */
+
+
+		 
 		L.Draw.Rectangle.prototype.initialize.call(this, map, options);
+	
+		this._initialLabelText = this.options.textboxTooltipEnd;
+	
 
 		this.type = L.Illustrate.Create.Textbox.TYPE;
 	},
@@ -684,7 +700,12 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 
 	options: {
 		textbox: {},
-		pointer: {}
+//		pointer: {}
+		illustrate: {
+			cancelTxt: "Cancelar",
+			cancelTitleTxt: "Cancelar rectángulo de texto",
+			textboxTitle: "Agregá texto"	
+		}
 	},
 
 	initialize: function(options) {
@@ -706,7 +727,7 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 			{
 				enabled: this.options.textbox,
 				handler: new L.Illustrate.Create.Textbox(map, this.options.textbox),
-				title: 'Add a textbox'
+				title: this.options.illustrate.textboxTitle
 			},
 			{
 				enabled: this.options.pointer,
@@ -717,7 +738,13 @@ L.Illustrate.Toolbar = L.Toolbar.extend({
 	},
 
 	getActions: function() {
-		return [];
+		return [
+		{
+            title: this.options.illustrate.cancelTitleTxt,
+            text: this.options.illustrate.cancelTxt,
+            callback: this.disable,
+            context: this
+        } ];
 	},
 
 	setOptions: function (options) {
@@ -738,24 +765,26 @@ L.Illustrate.Control = L.Control.Draw.extend({
 		}
 
 		L.Control.prototype.initialize.call(this, options);
-
 		var id,
 			toolbar;
 
 		this._toolbars = {};
-
+ 
 		/* Initialize toolbars for creating L.Illustrate objects. */
 		if (L.Illustrate.Toolbar && this.options.draw) {
 			toolbar = new L.Illustrate.Toolbar(this.options.draw);
 			id = L.stamp(toolbar);
 			this._toolbars[id] = toolbar;
 
+
 			// Listen for when toolbar is enabled
+			//console.log("Illustrate.Control: _toolbarEnabled");
 			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
+		
 
 		/* Initialize generic edit/delete toolbars. */
-		if (L.EditToolbar && this.options.edit) {
+/*		if (L.EditToolbar && this.options.edit) {
 			toolbar = new L.EditToolbar(this.options.edit);
 			id = L.stamp(toolbar);
 			this._toolbars[id] = toolbar;
@@ -765,7 +794,19 @@ L.Illustrate.Control = L.Control.Draw.extend({
 			// Listen for when toolbar is enabled
 			this._toolbars[id].on('enable', this._toolbarEnabled, this);
 		}
-	}
+*/		
+	},
+
+	/* 22/12/2016: Franco
+		Agrego la función _toolbarEnabled parecida a la que se encuentra en leaflet-draw-dev 
+	*/
+
+	_toolbarEnabled: function(t) {
+        var e = "" + L.stamp(t.target);
+        for (var i in this._toolbars) this._toolbars.hasOwnProperty(i) && i !== e && this._toolbars[i].disable();
+        for (var i in this.secondToolbar._toolbars) this.secondToolbar._toolbars[i].disable();
+    }
+
 });
 
 L.Map.addInitHook(function() {
@@ -780,6 +821,13 @@ if (L.EditToolbar.Edit) {
 	L.EditToolbar.Edit.prototype._toggleMarkerHighlight = function() {};
 }
 L.Illustrate.tooltipText = {
+	draw: {
+		handlers: {
+			textbox: {
+				//start: textboxTooltipTxt
+			}
+		}
+	},
 	create: {
 		toolbar: {
 			actions: {
