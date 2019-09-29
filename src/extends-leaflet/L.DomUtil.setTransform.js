@@ -1,4 +1,11 @@
 if (L.DomUtil) {
+	L.DomUtil.getTranslateString = function (point) {
+		var is3d = L.Browser.webkit3d,
+		    open = 'translate' + (is3d ? '3d' : '') + '(',
+		    close = (is3d ? ',0' : '') + ')';
+
+		return open + point.x + 'px,' + point.y + 'px' + close;
+	};
 	L.DomUtil.setTransform = function (el, point, angle, disable3D) {
 
 		// jshint camelcase: false

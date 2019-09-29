@@ -31,8 +31,8 @@ L.Illustrate.Create.Textbox = L.Draw.Rectangle.extend({
 	_fireCreatedEvent: function() {
 		var latlngs = this._shape.getLatLngs(),
 			center = new L.LatLngBounds(latlngs).getCenter(),
-			corner = latlngs[1],
-			oppositeCorner = latlngs[3],
+			corner = latlngs[0][1],
+			oppositeCorner = latlngs[0][3],
 			cornerPixelCoordinates = this._map.latLngToLayerPoint(corner).round(),
 			oppositeCornerPixelCoordinates = this._map.latLngToLayerPoint(oppositeCorner).round(),
 			width = oppositeCornerPixelCoordinates.x - cornerPixelCoordinates.x + 2,
