@@ -226,6 +226,7 @@ L.Illustrate.textbox = function(latlng, options) {
 L.Illustrate.Selectable = L.Handler.extend({
 
 	includes: [L.Mixin.Events],
+
 	statics: {
 		START: 'mousedown',
 		END: {
@@ -242,7 +243,7 @@ L.Illustrate.Selectable = L.Handler.extend({
 		}
 	},
 
-	initialize: function (element, selectStartTarget) {
+	initialize: function(element, selectStartTarget) {
 		this._element = element;
 		this._selectStartTarget = selectStartTarget || element;
 	},
