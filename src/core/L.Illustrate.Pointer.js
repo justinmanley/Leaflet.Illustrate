@@ -5,7 +5,7 @@ L.Illustrate.Pointer = L.Path.extend({
 	},
 
 	initialize: function(anchor, coordinates, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.setOptions(this, options);
 
 		this._coordinates = coordinates;
 		this._latlng = anchor;

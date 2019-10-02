@@ -24,7 +24,7 @@ L.Illustrate.Textbox = L.RotatableMarker.extend({
 
 		this._textContent = this.options.textContent;
 		this._minSize = this.options.minSize;
-		
+
 		this.setSize(this.options.size || this._minSize);
 	},
 
@@ -228,9 +228,19 @@ L.Illustrate.Selectable = L.Handler.extend({
 	includes: [L.Mixin.Events],
 
 	statics: {
-		START: L.Draggable.START,
-		END: L.Draggable.END,
-		MOVE: L.Draggable.MOVE
+		START: 'mousedown',
+		END: {
+			mousedown: 'mouseup',
+			touchstart: 'touchend',
+			pointerdown: 'touchend',
+			MSPointerDown: 'touchend'
+		},
+		MOVE: {
+			mousedown: 'mousemove',
+			touchstart: 'touchmove',
+			pointerdown: 'touchmove',
+			MSPointerDown: 'touchmove'
+		}
 	},
 
 	initialize: function(element, selectStartTarget) {

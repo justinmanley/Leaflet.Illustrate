@@ -20,10 +20,10 @@ L.Illustrate.Create.Pointer = L.Draw.Polyline.extend({
 			pointer;
 
 		for (var i = 0, length = latlngs.length; i < length; i++) {
-			coordinates[i] = this._map.latLngToLayerPoint(latlngs[i])._subtract(origin);
+			coordinates[i] = this._map.latLngToLayerPoint(latlngs[0][i])._subtract(origin);
 		}
 
-		pointer = new L.Illustrate.Pointer(latlngs[0], coordinates, this.options.shapeOptions);
+		pointer = new L.Illustrate.Pointer(latlngs[0][0], coordinates, this.options.shapeOptions);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, pointer);
 	}
 });
